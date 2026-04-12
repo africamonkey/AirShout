@@ -11,17 +11,11 @@ final class DeviceDiscoveryManager: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
 
     private init() {
-        setupRouteChangeObserver()
         updateAvailableDevices()
     }
 
     private func setupRouteChangeObserver() {
-        NotificationCenter.default.publisher(for: AVAudioSession.routeChangeNotification)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.updateAvailableDevices()
-            }
-            .store(in: &cancellables)
+        // Temporarily disabled to isolate UI freeze issue
     }
 
     private func updateAvailableDevices() {

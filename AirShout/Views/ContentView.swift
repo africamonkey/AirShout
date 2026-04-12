@@ -31,9 +31,6 @@ struct ContentView: View {
             Spacer()
         }
         .padding()
-        .onReceive(DeviceDiscoveryManager.shared.$selectedDevice) { _ in
-            viewModel.refreshDevices()
-        }
         .sheet(isPresented: $showingAirPlayPicker) {
             VStack {
                 Text("选择 AirPlay 设备")
