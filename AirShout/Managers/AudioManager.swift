@@ -14,7 +14,23 @@ final class AudioManager: ObservableObject {
 
     private init() {}
 
+    enum AudioError: Error {
+        case microphonePermissionDenied
+    }
+
+    private func requestMicrophonePermission() async -> Bool {
+        return await withCheckedContinuation { continuation in
+            AVAudioApplication.requestRecordPermission { granted in
+                continuation.resume(returning: granted)
+            }
+        }
+    }
+
     func start() throws {
+        let granted = await requestMicrophonePermission()
+        guard granted else {
+            throw AudioError.microphonePermissionDenied
+        }
         try configureAudioSession()
 
         audioEngine = AVAudioEngine()
