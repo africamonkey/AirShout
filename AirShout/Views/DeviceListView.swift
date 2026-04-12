@@ -3,7 +3,8 @@ import AVFAudio
 
 struct DeviceListView: View {
     let onSelectTapped: () -> Void
-
+    @State private var currentRouteName: String = "未选择设备"
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -27,11 +28,25 @@ struct DeviceListView: View {
                 .foregroundColor(.secondary)
                 .padding(.horizontal)
         }
+        .onAppear {
+            updateRouteName()
+            setupRouteObserver()
+        }
     }
-
-    private var currentRouteName: String {
+    
+    private func updateRouteName() {
         let session = AVAudioSession.sharedInstance()
-        return session.currentRoute.outputs.first?.portName ?? "未选择设备"
+        currentRouteName = session.currentRoute.outputs.first?.portName ?? "未选择设备"
+    }
+    
+    private func setupRouteObserver() {
+        NotificationCenter.default.addObserver(
+            forName: AVAudioSession.routeChangeNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            updateRouteName()
+        }
     }
 }
 
