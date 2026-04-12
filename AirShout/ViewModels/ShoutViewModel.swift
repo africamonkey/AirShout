@@ -34,10 +34,12 @@ final class ShoutViewModel: ObservableObject {
     }
 
     func startShout() {
-        do {
-            try audioManager.start()
-        } catch {
-            print("Failed to start audio: \(error)")
+        Task {
+            do {
+                try await audioManager.start()
+            } catch {
+                print("Failed to start audio: \(error)")
+            }
         }
     }
 

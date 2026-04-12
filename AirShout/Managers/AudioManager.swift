@@ -26,7 +26,7 @@ final class AudioManager: ObservableObject {
         }
     }
 
-    func start() throws {
+    func start() async throws {
         let granted = await requestMicrophonePermission()
         guard granted else {
             throw AudioError.microphonePermissionDenied
@@ -57,7 +57,7 @@ final class AudioManager: ObservableObject {
 
         audioEngine.prepare()
         try audioEngine.start()
-        try playerNode.play()
+        playerNode.play()
 
         isRunning = true
     }
@@ -73,7 +73,7 @@ final class AudioManager: ObservableObject {
     }
 
     private func configureAudioSession() throws {
-        try audioSession.setCategory(.playAndRecord, mode: .voiceChat, options: [.defaultToSpeaker, .allowBluetooth, .allowAirPlay])
+        try audioSession.setCategory(.playAndRecord, mode: .voiceChat, options: [.defaultToSpeaker, .allowBluetoothHFP, .allowAirPlay])
         try audioSession.setActive(true)
     }
 

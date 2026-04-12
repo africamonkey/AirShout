@@ -8,7 +8,6 @@ final class DeviceDiscoveryManager: ObservableObject {
     @Published var availableDevices: [Device] = []
     @Published var selectedDevice: Device?
 
-    private let routeDetector = AVRouteDetector()
     private var cancellables = Set<AnyCancellable>()
 
     private init() {
@@ -49,7 +48,6 @@ final class DeviceDiscoveryManager: ObservableObject {
     }
 
     func refreshDevices() {
-        routeDetector.isRouteDetectionEnabled = true
         updateAvailableDevices()
     }
 }
