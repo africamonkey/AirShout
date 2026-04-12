@@ -1,7 +1,7 @@
 import SwiftUI
+import AVFAudio
 
 struct DeviceListView: View {
-    @ObservedObject var deviceManager = DeviceDiscoveryManager.shared
     let onSelectTapped: () -> Void
 
     var body: some View {
@@ -22,11 +22,16 @@ struct DeviceListView: View {
             .background(Color(.systemGray6))
             .cornerRadius(8)
 
-            Text(deviceManager.selectedDevice?.name ?? "未选择设备")
+            Text(currentRouteName)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .padding(.horizontal)
         }
+    }
+
+    private var currentRouteName: String {
+        let session = AVAudioSession.sharedInstance()
+        return session.currentRoute.outputs.first?.portName ?? "未选择设备"
     }
 }
 
