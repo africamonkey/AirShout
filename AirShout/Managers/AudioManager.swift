@@ -13,6 +13,7 @@ final class AudioManager: ObservableObject {
     private var playerNode: AVAudioPlayerNode?
     private var routeChangeObserver: NSObjectProtocol?
     private var isSessionConfigured = false
+    private var isEngineConfigured = false
 
     private init() {
         setupRouteChangeObserver()
@@ -64,16 +65,13 @@ final class AudioManager: ObservableObject {
         if wasRunning {
             stopEngineOnly()
         }
-        
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            do {
-                try self?.setupAndStartEngine()
-                DispatchQueue.main.async {
-                    self?.isRunning = true
-                }
-            } catch {
-                print("Failed to restart engine: \(error)")
-            }
+        isEngineConfigured = false
+
+        do {
+            try setupAndStartEngine()
+            isRunning = true
+        } catch {
+            print("Failed to restart engine: \(error)")
         }
     }
 
@@ -93,39 +91,48 @@ final class AudioManager: ObservableObject {
     }
 
     private func setupAndStartEngine() throws {
-        audioEngine = AVAudioEngine()
-        guard let audioEngine = audioEngine else { return }
+        if isEngineConfigured {
+            // Engine already configured, just start it
+            try audioEngine?.start()
+            playerNode?.play()
+        } else {
+            // First time: create engine from scratch
+            audioEngine = AVAudioEngine()
+            guard let audioEngine = audioEngine else { return }
 
-        let inputNode = audioEngine.inputNode
-        let outputNode = audioEngine.outputNode
-        let mainMixer = audioEngine.mainMixerNode
+            let inputNode = audioEngine.inputNode
+            let outputNode = audioEngine.outputNode
+            let mainMixer = audioEngine.mainMixerNode
 
-        playerNode = AVAudioPlayerNode()
-        guard let playerNode = playerNode else { return }
-        audioEngine.attach(playerNode)
+            playerNode = AVAudioPlayerNode()
+            guard let playerNode = playerNode else { return }
+            audioEngine.attach(playerNode)
 
-        let inputFormat = inputNode.outputFormat(forBus: 0)
-        let outputFormat = outputNode.inputFormat(forBus: 0)
+            let inputFormat = inputNode.outputFormat(forBus: 0)
+            let outputFormat = outputNode.inputFormat(forBus: 0)
 
-        audioEngine.connect(playerNode, to: mainMixer, format: inputFormat)
-        audioEngine.connect(mainMixer, to: outputNode, format: outputFormat)
+            audioEngine.connect(playerNode, to: mainMixer, format: inputFormat)
+            audioEngine.connect(mainMixer, to: outputNode, format: outputFormat)
 
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { [weak self] buffer, _ in
-            self?.processAudioBuffer(buffer)
-            self?.playerNode?.scheduleBuffer(buffer, completionHandler: nil)
+            inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { [weak self] buffer, _ in
+                self?.processAudioBuffer(buffer)
+                self?.playerNode?.scheduleBuffer(buffer, completionHandler: nil)
+            }
+
+            audioEngine.prepare()
+            try audioEngine.start()
+            playerNode.play()
+
+            isEngineConfigured = true
         }
-
-        audioEngine.prepare()
-        try audioEngine.start()
-        playerNode.play()
     }
 
     private func stopEngineOnly() {
         playerNode?.stop()
         audioEngine?.inputNode.removeTap(onBus: 0)
         audioEngine?.stop()
-        audioEngine = nil
-        playerNode = nil
+        // A+: Keep engine and playerNode, just stop them
+        // isEngineConfigured stays true
     }
 
     func stop() {
