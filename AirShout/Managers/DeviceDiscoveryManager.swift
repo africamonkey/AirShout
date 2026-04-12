@@ -17,6 +17,7 @@ final class DeviceDiscoveryManager: ObservableObject {
 
     private func setupRouteChangeObserver() {
         NotificationCenter.default.publisher(for: AVAudioSession.routeChangeNotification)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.updateAvailableDevices()
             }
