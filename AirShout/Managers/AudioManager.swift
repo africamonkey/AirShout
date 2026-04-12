@@ -11,8 +11,11 @@ final class AudioManager: ObservableObject {
     private var audioEngine: AVAudioEngine?
     private let audioSession = AVAudioSession.sharedInstance()
     private var playerNode: AVAudioPlayerNode?
+    private var routeChangeObserver: NSObjectProtocol?
 
-    private init() {}
+    private init() {
+        setupRouteChangeObserver()
+    }
 
     enum AudioError: Error {
         case microphonePermissionDenied
@@ -26,6 +29,53 @@ final class AudioManager: ObservableObject {
         }
     }
 
+    private func setupRouteChangeObserver() {
+        routeChangeObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.routeChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            self?.handleRouteChange(notification)
+        }
+    }
+
+    private func handleRouteChange(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
+              let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue) else {
+            return
+        }
+
+        switch reason {
+        case .newDeviceAvailable, .oldDeviceUnavailable, .override, .routeConfigurationChange:
+            if isRunning {
+                DispatchQueue.main.async { [weak self] in
+                    self?.restartEngine()
+                }
+            }
+        default:
+            break
+        }
+    }
+
+    private func restartEngine() {
+        let wasRunning = isRunning
+        if wasRunning {
+            stopEngineOnly()
+        }
+        
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            do {
+                try self?.setupAndStartEngine()
+                DispatchQueue.main.async {
+                    self?.isRunning = true
+                }
+            } catch {
+                print("Failed to restart engine: \(error)")
+            }
+        }
+    }
+
     func start() async throws {
         let granted = await requestMicrophonePermission()
         guard granted else {
@@ -33,6 +83,11 @@ final class AudioManager: ObservableObject {
         }
         try configureAudioSession()
 
+        try setupAndStartEngine()
+        isRunning = true
+    }
+
+    private func setupAndStartEngine() throws {
         audioEngine = AVAudioEngine()
         guard let audioEngine = audioEngine else { return }
 
@@ -58,16 +113,18 @@ final class AudioManager: ObservableObject {
         audioEngine.prepare()
         try audioEngine.start()
         playerNode.play()
-
-        isRunning = true
     }
 
-    func stop() {
+    private func stopEngineOnly() {
         playerNode?.stop()
         audioEngine?.inputNode.removeTap(onBus: 0)
         audioEngine?.stop()
         audioEngine = nil
         playerNode = nil
+    }
+
+    func stop() {
+        stopEngineOnly()
         isRunning = false
         audioLevel = 0
     }
