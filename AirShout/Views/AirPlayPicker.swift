@@ -1,12 +1,11 @@
 import SwiftUI
-import MediaPlayer
+import AVKit
 
 struct AirPlayPicker: UIViewRepresentable {
-    func makeUIView(context: Context) -> MPVolumeView {
-        let volumeView = MPVolumeView()
-        volumeView.showsVolumeSlider = false
-        return volumeView
+    func makeUIView(context: Context) -> AVRoutePickerView {
+        let routePickerView = AVRoutePickerView()
+        return routePickerView
     }
 
-    func updateUIView(_ uiView: MPVolumeView, context: Context) {}
+    func updateUIView(_ uiView: AVRoutePickerView, context: Context) {}
 }
