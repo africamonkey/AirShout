@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct DeviceListView: View {
-    @ObservedObject var audioRouter = AudioRouter.shared
+    @ObservedObject var deviceManager = DeviceDiscoveryManager.shared
     let onSelectTapped: () -> Void
 
     var body: some View {
@@ -22,7 +22,7 @@ struct DeviceListView: View {
             .background(Color(.systemGray6))
             .cornerRadius(8)
 
-            Text(audioRouter.currentRoute)
+            Text(deviceManager.selectedDevice?.name ?? "未选择设备")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .padding(.horizontal)
