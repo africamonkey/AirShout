@@ -12,6 +12,7 @@ final class AudioManager: ObservableObject {
     private let audioSession = AVAudioSession.sharedInstance()
     private var playerNode: AVAudioPlayerNode?
     private var routeChangeObserver: NSObjectProtocol?
+    private var isSessionConfigured = false
 
     private init() {
         setupRouteChangeObserver()
@@ -81,7 +82,11 @@ final class AudioManager: ObservableObject {
         guard granted else {
             throw AudioError.microphonePermissionDenied
         }
-        try configureAudioSession()
+        
+        if !isSessionConfigured {
+            try configureAudioSession()
+            isSessionConfigured = true
+        }
 
         try setupAndStartEngine()
         isRunning = true
