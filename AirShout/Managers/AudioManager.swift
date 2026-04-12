@@ -64,10 +64,14 @@ final class AudioManager: ObservableObject {
     private func processAudioBuffer(_ buffer: AVAudioPCMBuffer) {
         guard let channelData = buffer.floatChannelData else { return }
         let channelDataValue = channelData.pointee
-        let channelDataValueArray = stride(from: 0, to: Int(buffer.frameLength), by: buffer.stride).map { channelDataValue[$0] }
-
-        let rms = sqrt(channelDataValueArray.map { $0 * $0 }.reduce(0, +) / Float(buffer.frameLength))
-        let avgPower = 20 * log10(rms)
+        
+        var sum: Float = 0
+        for i in stride(from: 0, to: Int(buffer.frameLength), by: buffer.stride) {
+            let sample = channelDataValue[i]
+            sum += sample * sample
+        }
+        let rms = sqrt(sum / Float(buffer.frameLength))
+        let avgPower = 20 * log10(max(rms, 0.000001))
         let normalizedLevel = max(0, min(1, (avgPower + 50) / 50))
 
         DispatchQueue.main.async { [weak self] in
