@@ -10,11 +10,7 @@ final class AudioManager: ObservableObject {
 
     private var audioEngine: AVAudioEngine?
     private let audioSession = AVAudioSession.sharedInstance()
-    private var levelTimer: Timer?
-
-    var audioLevelPublisher: AnyPublisher<Float, Never> {
-        $audioLevel.eraseToAnyPublisher()
-    }
+    private var playerNode: AVAudioPlayerNode?
 
     private init() {}
 
@@ -28,45 +24,40 @@ final class AudioManager: ObservableObject {
         let outputNode = audioEngine.outputNode
         let mainMixer = audioEngine.mainMixerNode
 
-        let format = inputNode.outputFormat(forBus: 0)
+        playerNode = AVAudioPlayerNode()
+        guard let playerNode = playerNode else { return }
+        audioEngine.attach(playerNode)
 
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
+        let inputFormat = inputNode.outputFormat(forBus: 0)
+        let outputFormat = outputNode.inputFormat(forBus: 0)
+
+        audioEngine.connect(playerNode, to: mainMixer, format: inputFormat)
+        audioEngine.connect(mainMixer, to: outputNode, format: outputFormat)
+
+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { [weak self] buffer, _ in
             self?.processAudioBuffer(buffer)
-        }
-
-        let inputDevice = inputNode.device
-        let outputDevice = outputNode.device
-
-        audioEngine.connect(inputNode, to: mainMixer, format: format)
-
-        if let inputDevice = inputDevice {
-            audioEngine.enableManualRoutingMode = true
-            let route = AVAudioRoutingRoute(input: inputDevice, output: outputDevice, inputFormat: format, outputFormat: format)
-            do {
-                try audioEngine.manualRoutingRoute = route
-            } catch {
-                print("Manual routing failed: \(error)")
-            }
+            self?.playerNode?.scheduleBuffer(buffer, completionHandler: nil)
         }
 
         audioEngine.prepare()
         try audioEngine.start()
+        try playerNode.play()
 
         isRunning = true
-        startLevelTimer()
     }
 
     func stop() {
+        playerNode?.stop()
         audioEngine?.inputNode.removeTap(onBus: 0)
         audioEngine?.stop()
         audioEngine = nil
+        playerNode = nil
         isRunning = false
         audioLevel = 0
-        stopLevelTimer()
     }
 
     private func configureAudioSession() throws {
-        try audioSession.setCategory(.playAndRecord, mode: .voiceChat, options: [.defaultToSpeaker, .allowBluetooth])
+        try audioSession.setCategory(.playAndRecord, mode: .voiceChat, options: [.defaultToSpeaker, .allowBluetooth, .allowAirPlay])
         try audioSession.setActive(true)
     }
 
@@ -82,16 +73,5 @@ final class AudioManager: ObservableObject {
         DispatchQueue.main.async { [weak self] in
             self?.audioLevel = normalizedLevel
         }
-    }
-
-    private func startLevelTimer() {
-        levelTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
-            guard let self = self, self.isRunning else { return }
-        }
-    }
-
-    private func stopLevelTimer() {
-        levelTimer?.invalidate()
-        levelTimer = nil
     }
 }
