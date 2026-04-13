@@ -14,6 +14,8 @@ final class AudioManager: ObservableObject {
     private var routeChangeObserver: NSObjectProtocol?
     private var isSessionConfigured = false
 
+    private let engineQueue = DispatchQueue(label: "com.airshout.audioengine")
+
     private init() {
         setupRouteChangeObserver()
     }
@@ -49,9 +51,10 @@ final class AudioManager: ObservableObject {
 
         switch reason {
         case .newDeviceAvailable, .oldDeviceUnavailable, .override, .routeConfigurationChange:
-            if isRunning {
-                DispatchQueue.main.async { [weak self] in
-                    self?.restartEngine()
+            let running = isRunning
+            if running {
+                engineQueue.async { [weak self] in
+                    self?.restartEngineInternal()
                 }
             }
         default:
@@ -59,15 +62,14 @@ final class AudioManager: ObservableObject {
         }
     }
 
-    private func restartEngine() {
-        let wasRunning = isRunning
-        if wasRunning {
-            stopEngineOnly()
-        }
+    private func restartEngineInternal() {
+        stopEngineOnly()
 
         do {
             try setupAndStartEngine()
-            isRunning = true
+            DispatchQueue.main.async { [weak self] in
+                self?.isRunning = true
+            }
         } catch {
             print("Failed to restart engine: \(error)")
         }
@@ -84,8 +86,12 @@ final class AudioManager: ObservableObject {
             isSessionConfigured = true
         }
 
-        try setupAndStartEngine()
-        isRunning = true
+        try engineQueue.sync {
+            try setupAndStartEngine()
+        }
+        DispatchQueue.main.async { [weak self] in
+            self?.isRunning = true
+        }
     }
 
     private func setupAndStartEngine() throws {
@@ -133,9 +139,13 @@ final class AudioManager: ObservableObject {
     }
 
     func stop() {
-        stopEngineOnly()
-        isRunning = false
-        audioLevel = 0
+        engineQueue.async { [weak self] in
+            self?.stopEngineOnly()
+            DispatchQueue.main.async { [weak self] in
+                self?.isRunning = false
+                self?.audioLevel = 0
+            }
+        }
     }
 
     private func configureAudioSession() throws {
