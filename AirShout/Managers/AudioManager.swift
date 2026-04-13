@@ -149,7 +149,10 @@ final class AudioManager: ObservableObject {
     }
 
     private func configureAudioSession() throws {
-        try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.allowBluetoothHFP, .allowAirPlay])
+        try audioSession.setCategory(
+            .playAndRecord,
+            mode: .default,
+            options: [.allowBluetoothA2DP, .allowBluetoothHFP, .allowAirPlay])
         try audioSession.setActive(true)
     }
 
