@@ -215,6 +215,7 @@ final class AudioManager: ObservableObject {
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { [weak self] buffer, _ in
             guard let self = self else { return }
             self.processAudioBuffer(buffer)
+            guard self.isRunning else { return }
             self.playerNode?.scheduleBuffer(buffer, completionHandler: nil)
         }
 

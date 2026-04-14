@@ -193,6 +193,23 @@ private func handleRouteChange(_ notification: Notification) {
 - 使用 `DispatchQueue` 的串行队列保护共享状态
 - UI 更新必须在主线程，使用 `DispatchQueue.main.async`
 
+### scheduleBuffer 在已停止节点上被调用
+
+**问题**：Tap 回调中的 `scheduleBuffer` 可能在 `stopEngineOnly()` 执行期间被调用，此时 `playerNode` 可能处于停止状态，导致音频线程阻塞。
+
+**症状**：点击"停止"按钮后 UI 冻结。
+
+**解决方案**：在 tap 回调中添加 `isRunning` 检查，确保引擎还在运行时才 schedule buffer：
+
+```swift
+inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { [weak self] buffer, _ in
+    guard let self = self else { return }
+    self.processAudioBuffer(buffer)
+    guard self.isRunning else { return }
+    self.playerNode?.scheduleBuffer(buffer, completionHandler: nil)
+}
+```
+
 ## 开发命令
 
 ```bash
