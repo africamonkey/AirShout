@@ -37,13 +37,11 @@ struct ContentView: View {
 
                 Spacer()
 
-                ShoutButton(isActive: viewModel.isShouting) {
-                    if viewModel.isShouting {
-                        viewModel.stopShout()
-                    } else {
-                        viewModel.startShout()
-                    }
-                }
+                ShoutButton(
+                    isPressed: .constant(viewModel.isShouting),
+                    onPress: { viewModel.startShout() },
+                    onRelease: { viewModel.stopShout() }
+                )
 
                 Spacer()
             }
