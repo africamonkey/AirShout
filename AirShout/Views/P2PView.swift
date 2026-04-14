@@ -78,9 +78,14 @@ struct P2PView: View {
                 .frame(width: 60, height: 60)
 
             ShoutButton(
-                isPressed: $viewModel.isSpeaking,
-                onPress: { viewModel.startSpeaking() },
-                onRelease: { viewModel.stopSpeaking() }
+                isActive: viewModel.isSpeaking,
+                onTap: {
+                    if viewModel.isSpeaking {
+                        viewModel.stopSpeaking()
+                    } else {
+                        viewModel.startSpeaking()
+                    }
+                }
             )
 
             WaveformView(audioLevel: viewModel.audioLevel)

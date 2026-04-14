@@ -2,9 +2,8 @@ import SwiftUI
 import UIKit
 
 struct ShoutButton: View {
-    @Binding var isPressed: Bool
-    let onPress: () -> Void
-    let onRelease: () -> Void
+    let isActive: Bool
+    let onTap: () -> Void
 
     private let impactGenerator = UIImpactFeedbackGenerator(style: .medium)
     private let notificationGenerator = UINotificationFeedbackGenerator()
@@ -24,10 +23,10 @@ struct ShoutButton: View {
     var body: some View {
         ZStack {
             Circle()
-                .fill(isPressed ? activeGradient : inactiveGradient)
+                .fill(isActive ? activeGradient : inactiveGradient)
                 .frame(width: 120, height: 120)
                 .shadow(
-                    color: isPressed ? .red.opacity(0.4) : .purple.opacity(0.4),
+                    color: isActive ? .red.opacity(0.4) : .purple.opacity(0.4),
                     radius: 15,
                     x: 0,
                     y: 8
@@ -37,31 +36,29 @@ struct ShoutButton: View {
                 .stroke(Color.white.opacity(0.4), lineWidth: 3)
                 .frame(width: 110, height: 110)
 
-            Text(isPressed ? "停止" : "开始")
+            Text(isActive ? "停止" : "开始")
                 .font(.headline)
                 .fontWeight(.semibold)
                 .foregroundColor(.white)
         }
-        .scaleEffect(isPressed ? 0.95 : 1.0)
-        .animation(.easeInOut(duration: 0.1), value: isPressed)
+        .scaleEffect(isActive ? 0.95 : 1.0)
+        .animation(.easeInOut(duration: 0.1), value: isActive)
         .gesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in
-                    if !isPressed {
+            TapGesture()
+                .onEnded {
+                    if isActive {
+                        notificationGenerator.notificationOccurred(.warning)
+                    } else {
                         impactGenerator.impactOccurred()
-                        isPressed = true
-                        onPress()
                     }
-                }
-                .onEnded { _ in
-                    notificationGenerator.notificationOccurred(.warning)
-                    isPressed = false
-                    onRelease()
+                    onTap()
                 }
         )
     }
 }
 
 #Preview {
-    ShoutButton(isPressed: .constant(false), onPress: {}, onRelease: {})
+    ShoutButton(isActive: false) {
+        print("Tapped")
+    }
 }
