@@ -40,6 +40,8 @@ final class P2PViewModel: ObservableObject {
                 self?.connectionStatus = status
                 if case .error(let message) = status {
                     self?.errorMessage = message
+                } else {
+                    self?.errorMessage = nil
                 }
             }
             .store(in: &cancellables)
