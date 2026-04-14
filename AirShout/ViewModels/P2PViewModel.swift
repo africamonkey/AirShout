@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import MultipeerConnectivity
 
 @MainActor
 final class P2PViewModel: ObservableObject {
