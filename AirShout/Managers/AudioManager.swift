@@ -92,6 +92,7 @@ final class AudioManager: ObservableObject {
             engineQueue.async {
                 do {
                     try self.setupAndStartEngine()
+                    self.saveCurrentDeviceUID()
                     continuation.resume()
                 } catch {
                     continuation.resume(throwing: error)
@@ -163,6 +164,11 @@ final class AudioManager: ObservableObject {
             mode: .default,
             options: [.allowBluetoothA2DP, .allowBluetoothHFP, .allowAirPlay])
         try audioSession.setActive(true)
+    }
+
+    private func saveCurrentDeviceUID() {
+        guard let deviceUID = audioSession.currentRoute.outputs.first?.uid else { return }
+        DevicePreferences.save(deviceUID: deviceUID)
     }
 
     private func processAudioBuffer(_ buffer: AVAudioPCMBuffer) {

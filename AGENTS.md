@@ -10,6 +10,10 @@ AirShout 是一款 iOS 应用，实现实时隔空喊话功能：用户按住说
 - **设备选择**：通过 AVRoutePickerView 选择可用的 AirPlay 设备
 - **音量反馈**：实时显示麦克风音量波形
 - **权限管理**：麦克风权限请求
+- **Haptic 反馈**：按住按钮时触发触觉反馈
+- **设备记忆**：记住上次使用的 AirPlay 设备
+- **后台音频**：App 进入后台时继续传输音频
+- **错误提示**：麦克风权限被拒绝时显示友好的引导提示
 
 ## 技术架构
 
@@ -18,11 +22,11 @@ AirShout 是一款 iOS 应用，实现实时隔空喊话功能：用户按住说
 | 文件 | 职责 |
 |------|------|
 | `AudioManager.swift` | 管理 AVAudioEngine，处理音频采集和播放 |
-| `DeviceDiscoveryManager.swift` | 发现和管理 AirPlay 设备 |
+| `DevicePreferences.swift` | 设备记忆：存储和恢复上次使用的 AirPlay 设备 |
 | `ShoutViewModel.swift` | 连接 UI 和音频管理层 |
 | `ContentView.swift` | 主界面 |
 | `AirPlayPicker.swift` | AVRoutePickerView 的 SwiftUI 包装 |
-| `ShoutButton.swift` | 按住说话按钮 |
+| `ShoutButton.swift` | 按住说话按钮（含 Haptic 反馈） |
 | `WaveformView.swift` | 音量波形显示 |
 | `DeviceListView.swift` | 设备选择列表 |
 
@@ -66,6 +70,11 @@ AirShout 是一款 iOS 应用，实现实时隔空喊话功能：用户按住说
 - ✅ 音频引擎生命周期管理（每次启动重建引擎）
 - ✅ 路由变化监听器（自动重连 AirPlay 设备）
 - ✅ UI 冻结问题修复（engineQueue 异步调用 + 音频级别节流）
+- ✅ Haptic 反馈（按下按钮时触发）
+- ✅ 设备记忆（记住上次使用的 AirPlay 设备）
+- ✅ 后台音频（App 在后台时继续传输）
+- ✅ 麦克风权限错误提示 UI
+- ✅ 单元测试（AudioManager + DevicePreferences）
 - ✅ 编译通过
 
 ### 待验证
@@ -93,6 +102,7 @@ xcodebuild -scheme AirShout -configuration Debug -destination 'platform=iOS Devi
 ## Git 提交历史
 
 ```
+xxxxxxx feat: add Phase 1 enhancements - Haptic, permission alert, device memory, background audio, unit tests
 b68e144 engineQueue 非阻塞调用，修复UI冻结问题
 41f73cd change mode to default
 c8bc475 禁止 restartEngine 在主线程运行

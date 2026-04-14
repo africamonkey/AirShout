@@ -1,9 +1,12 @@
 import SwiftUI
+import UIKit
 
 struct ShoutButton: View {
     let isPressed: Bool
     let onPress: () -> Void
     let onRelease: () -> Void
+
+    private let impactGenerator = UIImpactFeedbackGenerator(style: .medium)
 
     var body: some View {
         ZStack {
@@ -26,6 +29,7 @@ struct ShoutButton: View {
             DragGesture(minimumDistance: 0)
                 .onChanged { _ in
                     if !isPressed {
+                        impactGenerator.impactOccurred()
                         onPress()
                     }
                 }

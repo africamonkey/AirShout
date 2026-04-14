@@ -4,6 +4,7 @@ import Combine
 final class ShoutViewModel: ObservableObject {
     @Published var audioLevel: Float = 0
     @Published var isShouting: Bool = false
+    @Published var showPermissionAlert: Bool = false
 
     private let audioManager = AudioManager.shared
     private var cancellables = Set<AnyCancellable>()
@@ -23,9 +24,11 @@ final class ShoutViewModel: ObservableObject {
     }
 
     func startShout() {
-        Task {
+        Task { @MainActor in
             do {
                 try await audioManager.start()
+            } catch AudioManager.AudioError.microphonePermissionDenied {
+                showPermissionAlert = true
             } catch {
                 print("Failed to start audio: \(error)")
             }
