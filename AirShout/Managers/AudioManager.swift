@@ -14,6 +14,12 @@ final class AudioManager: ObservableObject {
         case connecting
         case connected
         case transmitting
+        case error(String)
+        
+        var isTransmitting: Bool {
+            if case .transmitting = self { return true }
+            return false
+        }
     }
 
     private var audioEngine: AVAudioEngine?
@@ -106,6 +112,13 @@ final class AudioManager: ObservableObject {
             try setupAndStartEngine()
             DispatchQueue.main.async { [weak self] in
                 self?.isRunning = true
+            }
+        } catch AudioManager.AudioError.noInputAvailable {
+            print("Failed to restart engine: noInputAvailable")
+            DispatchQueue.main.async { [weak self] in
+                self?.isRunning = false
+                self?.audioLevel = 0
+                self?.connectionStatus = .error("没有可用的输入设备")
             }
         } catch {
             print("Failed to restart engine: \(error)")
@@ -261,7 +274,7 @@ final class AudioManager: ObservableObject {
 
         DispatchQueue.main.async { [weak self] in
             self?.audioLevel = normalizedLevel
-            if self?.connectionStatus != .transmitting && normalizedLevel > 0.01 {
+            if !(self?.connectionStatus.isTransmitting ?? false) && normalizedLevel > 0.01 {
                 self?.connectionStatus = .transmitting
             }
         }

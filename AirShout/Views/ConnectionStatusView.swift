@@ -30,6 +30,8 @@ struct ConnectionStatusView: View {
             return .green
         case .transmitting:
             return .blue
+        case .error:
+            return .red
         }
     }
 
@@ -43,6 +45,8 @@ struct ConnectionStatusView: View {
             return "已连接"
         case .transmitting:
             return "传输中"
+        case .error(let message):
+            return message
         }
     }
 }
