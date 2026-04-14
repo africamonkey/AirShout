@@ -19,17 +19,19 @@ struct DeviceListView: View {
                 .font(.subheadline)
             }
             .padding(.horizontal)
-            .padding(.vertical, 8)
+            .padding(.top, 4)
 
             Text(currentRouteName)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .padding(.horizontal)
+                .padding(.bottom, 4)
         }
+        .padding(.vertical, 8)
         .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: 20))
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: 20)
                 .stroke(Color.white.opacity(0.3), lineWidth: 1)
         )
         .onAppear {
