@@ -29,8 +29,10 @@ final class AudioManager: ObservableObject {
     private var isSessionConfigured = false
     private var lastAudioLevelUpdate: TimeInterval = 0
     private let audioLevelUpdateInterval: TimeInterval = 0.05
+    private var isRestarting = false
 
     private let engineQueue = DispatchQueue(label: "com.airshout.audioengine")
+    private let stateQueue = DispatchQueue(label: "com.airshout.state")
 
     private init() {
         setupRouteChangeObserver()
@@ -95,9 +97,11 @@ final class AudioManager: ObservableObject {
         switch reason {
         case .newDeviceAvailable, .oldDeviceUnavailable, .override, .routeConfigurationChange:
             let running = isRunning
-            if running {
+            if running && !isRestarting {
+                isRestarting = true
                 engineQueue.async { [weak self] in
                     self?.restartEngineInternal()
+                    self?.isRestarting = false
                 }
             }
         default:
@@ -209,8 +213,9 @@ final class AudioManager: ObservableObject {
         audioEngine.connect(mainMixer, to: outputNode, format: outputFormat)
 
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { [weak self] buffer, _ in
-            self?.processAudioBuffer(buffer)
-            self?.playerNode?.scheduleBuffer(buffer, completionHandler: nil)
+            guard let self = self else { return }
+            self.processAudioBuffer(buffer)
+            self.playerNode?.scheduleBuffer(buffer, completionHandler: nil)
         }
 
         audioEngine.prepare()
