@@ -129,36 +129,34 @@ final class P2PAudioManager: NSObject, ObservableObject {
         audioEngine.connect(playerNode, to: mainMixer, format: inputFormat)
         audioEngine.connect(mainMixer, to: outputNode, format: outputFormat)
 
+        let connectedPeers = session.connectedPeers
+        let isEngineRunning = _audioEngineRunning
+
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { [weak self] buffer, _ in
             guard let self = self else { return }
-            self.processAndSendAudioBuffer(buffer)
-            let running = self._audioEngineRunning
-            guard running else { return }
+            guard isEngineRunning else { return }
+            guard !connectedPeers.isEmpty else { return }
+
+            self.processAudioLevel(buffer)
+
+            guard let channelData = buffer.floatChannelData else { return }
+            let frameLength = Int(buffer.frameLength)
+
+            let dataSize = frameLength * MemoryLayout<Float>.size
+            let data = Data(bytes: channelData[0], count: dataSize)
+
+            do {
+                try self.session.send(data, toPeers: connectedPeers, with: .unreliable)
+            } catch {
+                print("Failed to send audio data: \(error)")
+            }
+
             self.playerNode?.scheduleBuffer(buffer, completionHandler: nil)
         }
 
         audioEngine.prepare()
         try audioEngine.start()
         playerNode.play()
-    }
-
-    private func processAndSendAudioBuffer(_ buffer: AVAudioPCMBuffer) {
-        processAudioLevel(buffer)
-
-        let connectedPeers = session.connectedPeers
-        guard !connectedPeers.isEmpty else { return }
-
-        guard let channelData = buffer.floatChannelData else { return }
-        let frameLength = Int(buffer.frameLength)
-
-        let dataSize = frameLength * MemoryLayout<Float>.size
-        let data = Data(bytes: channelData[0], count: dataSize)
-
-        do {
-            try session.send(data, toPeers: connectedPeers, with: .unreliable)
-        } catch {
-            print("Failed to send audio data: \(error)")
-        }
     }
 
     private func processAudioLevel(_ buffer: AVAudioPCMBuffer) {
@@ -260,6 +258,7 @@ final class P2PAudioManager: NSObject, ObservableObject {
     private func playAudioData(_ data: Data) {
         engineQueue.async { [weak self] in
             guard let self = self, let audioEngine = self.audioEngine else { return }
+            guard let playerNode = self.playerNode else { return }
 
             let frameCount = AVAudioFrameCount(data.count / MemoryLayout<Float>.size)
             guard let buffer = AVAudioPCMBuffer(pcmFormat: audioEngine.mainMixerNode.outputFormat(forBus: 0), frameCapacity: frameCount) else {
@@ -273,9 +272,9 @@ final class P2PAudioManager: NSObject, ObservableObject {
                 memcpy(buffer.floatChannelData?[0], baseAddress, data.count)
             }
 
-            self.playerNode?.scheduleBuffer(buffer, completionHandler: nil)
-            if !(self.playerNode?.isPlaying ?? false) {
-                self.playerNode?.play()
+            playerNode.scheduleBuffer(buffer, completionHandler: nil)
+            if !playerNode.isPlaying {
+                playerNode.play()
             }
         }
     }
