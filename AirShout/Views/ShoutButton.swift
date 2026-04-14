@@ -8,19 +8,37 @@ struct ShoutButton: View {
     private let impactGenerator = UIImpactFeedbackGenerator(style: .medium)
     private let notificationGenerator = UINotificationFeedbackGenerator()
 
+    private let activeGradient = LinearGradient(
+        colors: [.red, .red.opacity(0.7)],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
+    private let inactiveGradient = LinearGradient(
+        colors: [.blue, .purple],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
     var body: some View {
         ZStack {
             Circle()
-                .fill(isActive ? Color.red : Color.accentColor)
+                .fill(isActive ? activeGradient : inactiveGradient)
                 .frame(width: 120, height: 120)
-                .shadow(color: isActive ? .red.opacity(0.6) : .black.opacity(0.2), radius: isActive ? 25 : 10, x: 0, y: 5)
+                .shadow(
+                    color: isActive ? .red.opacity(0.4) : .purple.opacity(0.4),
+                    radius: 15,
+                    x: 0,
+                    y: 8
+                )
 
             Circle()
-                .stroke(Color.white.opacity(0.3), lineWidth: 3)
+                .stroke(Color.white.opacity(0.4), lineWidth: 3)
                 .frame(width: 110, height: 110)
 
             Text(isActive ? "停止" : "开始")
                 .font(.headline)
+                .fontWeight(.semibold)
                 .foregroundColor(.white)
         }
         .scaleEffect(isActive ? 0.95 : 1.0)

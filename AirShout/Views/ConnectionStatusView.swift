@@ -2,13 +2,13 @@ import SwiftUI
 
 struct ConnectionStatusView: View {
     let status: AudioManager.ConnectionStatus
-    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         HStack(spacing: 8) {
             Circle()
                 .fill(statusColor)
                 .frame(width: 10, height: 10)
+                .shadow(color: statusColor.opacity(0.6), radius: 4)
 
             Text(statusText)
                 .font(.subheadline)
@@ -16,8 +16,12 @@ struct ConnectionStatusView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .background(colorScheme == .dark ? Color.black.opacity(0.3) : Color(.systemGray6))
-        .cornerRadius(16)
+        .background(.ultraThinMaterial)
+        .clipShape(Capsule())
+        .overlay(
+            Capsule()
+                .stroke(Color.white.opacity(0.3), lineWidth: 1)
+        )
     }
 
     private var statusColor: Color {

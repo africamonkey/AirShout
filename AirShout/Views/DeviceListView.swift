@@ -4,8 +4,7 @@ import AVFAudio
 struct DeviceListView: View {
     let onSelectTapped: () -> Void
     @State private var currentRouteName: String = "未选择设备"
-    @Environment(\.colorScheme) var colorScheme
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -21,25 +20,29 @@ struct DeviceListView: View {
             }
             .padding(.horizontal)
             .padding(.vertical, 8)
-            .background(colorScheme == .dark ? Color.black.opacity(0.3) : Color(.systemGray6))
-            .cornerRadius(8)
 
             Text(currentRouteName)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .padding(.horizontal)
         }
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.white.opacity(0.3), lineWidth: 1)
+        )
         .onAppear {
             updateRouteName()
             setupRouteObserver()
         }
     }
-    
+
     private func updateRouteName() {
         let session = AVAudioSession.sharedInstance()
         currentRouteName = session.currentRoute.outputs.first?.portName ?? "未选择设备"
     }
-    
+
     private func setupRouteObserver() {
         NotificationCenter.default.addObserver(
             forName: AVAudioSession.routeChangeNotification,
@@ -55,4 +58,5 @@ struct DeviceListView: View {
     DeviceListView {
         print("Select tapped")
     }
+    .padding()
 }

@@ -6,40 +6,52 @@ struct ContentView: View {
     @State private var showOnboarding = !AppPreferences.hasCompletedOnboarding
 
     var body: some View {
-        VStack(spacing: 24) {
-            HStack {
-                Text("AirShout")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
+        ZStack {
+            LinearGradient(
+                colors: [
+                    Color(.systemBackground),
+                    Color(.systemGray6).opacity(0.3)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+
+            VStack(spacing: 24) {
+                HStack {
+                    Text("AirShout")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+
+                    Spacer()
+
+                    ConnectionStatusView(status: viewModel.connectionStatus)
+                }
+                .padding(.top, 20)
+
+                DeviceListView {
+                    showingAirPlayPicker = true
+                }
 
                 Spacer()
 
-                ConnectionStatusView(status: viewModel.connectionStatus)
-            }
-            .padding(.top, 20)
+                WaveformView(audioLevel: viewModel.audioLevel)
+                    .frame(height: 60)
 
-            DeviceListView {
-                showingAirPlayPicker = true
-            }
+                Spacer()
 
-            Spacer()
-
-            WaveformView(audioLevel: viewModel.audioLevel)
-                .frame(height: 60)
-
-            Spacer()
-
-            ShoutButton(isActive: viewModel.isShouting) {
-                if viewModel.isShouting {
-                    viewModel.stopShout()
-                } else {
-                    viewModel.startShout()
+                ShoutButton(isActive: viewModel.isShouting) {
+                    if viewModel.isShouting {
+                        viewModel.stopShout()
+                    } else {
+                        viewModel.startShout()
+                    }
                 }
-            }
 
-            Spacer()
+                Spacer()
+            }
+            .padding()
         }
-        .padding()
         .alert("麦克风权限被拒绝", isPresented: $viewModel.showPermissionAlert) {
             Button("打开设置") {
                 if let settingsURL = URL(string: UIApplication.openSettingsURLString) {

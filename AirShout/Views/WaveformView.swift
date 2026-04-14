@@ -34,11 +34,23 @@ struct WaveformBar: View {
     let level: Float
     let isHighlighted: Bool
 
+    private let barGradient = LinearGradient(
+        colors: [.blue.opacity(0.7), .purple.opacity(0.7)],
+        startPoint: .bottom,
+        endPoint: .top
+    )
+
+    private let inactiveStyle = Color.gray.opacity(0.3)
+
     var body: some View {
         GeometryReader { geometry in
-            RoundedRectangle(cornerRadius: 2)
-                .fill(isHighlighted ? Color.accentColor : Color.gray.opacity(0.3))
+            RoundedRectangle(cornerRadius: 3)
+                .foregroundStyle(isHighlighted ? AnyShapeStyle(barGradient) : AnyShapeStyle(inactiveStyle))
                 .frame(height: geometry.size.height * CGFloat(max(0.05, level)))
+                .shadow(
+                    color: isHighlighted ? .purple.opacity(0.5) : .clear,
+                    radius: 4
+                )
                 .animation(.easeInOut(duration: 0.05), value: level)
         }
     }
