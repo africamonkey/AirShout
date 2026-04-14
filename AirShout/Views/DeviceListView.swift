@@ -8,8 +8,6 @@ struct DeviceListView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Image(systemName: "airplayaudio")
-                    .foregroundColor(.accentColor)
                 Text("选择设备")
                     .font(.headline)
                 Spacer()
