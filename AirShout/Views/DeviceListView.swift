@@ -1,8 +1,8 @@
 import SwiftUI
+import AVKit
 import AVFAudio
 
 struct DeviceListView: View {
-    let onSelectTapped: () -> Void
     @State private var currentRouteName: String = "未选择设备"
 
     var body: some View {
@@ -13,10 +13,8 @@ struct DeviceListView: View {
                 Text("选择设备")
                     .font(.headline)
                 Spacer()
-                Button("选择") {
-                    onSelectTapped()
-                }
-                .font(.subheadline)
+                AirPlayPicker()
+                    .frame(width: 44, height: 32)
             }
             .padding(.horizontal)
             .padding(.top, 4)
@@ -57,8 +55,6 @@ struct DeviceListView: View {
 }
 
 #Preview {
-    DeviceListView {
-        print("Select tapped")
-    }
-    .padding()
+    DeviceListView()
+        .padding()
 }
