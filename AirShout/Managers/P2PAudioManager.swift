@@ -53,6 +53,9 @@ final class P2PAudioManager: NSObject, ObservableObject {
     private let engineQueue = DispatchQueue(label: "com.airshout.p2paudioengine")
     private var lastAudioLevelUpdate: TimeInterval = 0
     private let audioLevelUpdateInterval: TimeInterval = 0.05
+    
+    private var _audioEngineRunning = false
+    private let stateQueue = DispatchQueue(label: "com.airshout.p2pstate")
 
     private override init() {
         super.init()
@@ -129,7 +132,8 @@ final class P2PAudioManager: NSObject, ObservableObject {
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { [weak self] buffer, _ in
             guard let self = self else { return }
             self.processAndSendAudioBuffer(buffer)
-            guard self.isRunning else { return }
+            let running = self._audioEngineRunning
+            guard running else { return }
             self.playerNode?.scheduleBuffer(buffer, completionHandler: nil)
         }
 
@@ -141,7 +145,8 @@ final class P2PAudioManager: NSObject, ObservableObject {
     private func processAndSendAudioBuffer(_ buffer: AVAudioPCMBuffer) {
         processAudioLevel(buffer)
 
-        guard !session.connectedPeers.isEmpty else { return }
+        let connectedPeers = session.connectedPeers
+        guard !connectedPeers.isEmpty else { return }
 
         guard let channelData = buffer.floatChannelData else { return }
         let frameLength = Int(buffer.frameLength)
@@ -150,7 +155,7 @@ final class P2PAudioManager: NSObject, ObservableObject {
         let data = Data(bytes: channelData[0], count: dataSize)
 
         do {
-            try session.send(data, toPeers: session.connectedPeers, with: .unreliable)
+            try session.send(data, toPeers: connectedPeers, with: .unreliable)
         } catch {
             print("Failed to send audio data: \(error)")
         }
@@ -201,6 +206,9 @@ final class P2PAudioManager: NSObject, ObservableObject {
             engineQueue.async {
                 do {
                     try self.setupAudioEngineForSpeaking()
+                    self.stateQueue.async {
+                        self._audioEngineRunning = true
+                    }
                     continuation.resume()
                 } catch {
                     continuation.resume(throwing: error)
@@ -216,6 +224,9 @@ final class P2PAudioManager: NSObject, ObservableObject {
 
     func stopSpeaking() {
         engineQueue.async { [weak self] in
+            self?.stateQueue.async {
+                self?._audioEngineRunning = false
+            }
             self?.playerNode?.stop()
             self?.audioEngine?.inputNode.removeTap(onBus: 0)
             self?.audioEngine?.stop()
@@ -248,10 +259,10 @@ final class P2PAudioManager: NSObject, ObservableObject {
 
     private func playAudioData(_ data: Data) {
         engineQueue.async { [weak self] in
-            guard let self = self, self.audioEngine != nil else { return }
+            guard let self = self, let audioEngine = self.audioEngine else { return }
 
             let frameCount = AVAudioFrameCount(data.count / MemoryLayout<Float>.size)
-            guard let buffer = AVAudioPCMBuffer(pcmFormat: self.audioEngine!.mainMixerNode.outputFormat(forBus: 0), frameCapacity: frameCount) else {
+            guard let buffer = AVAudioPCMBuffer(pcmFormat: audioEngine.mainMixerNode.outputFormat(forBus: 0), frameCapacity: frameCount) else {
                 return
             }
 
