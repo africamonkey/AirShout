@@ -3,6 +3,16 @@ import MultipeerConnectivity
 import AVFAudio
 import Combine
 
+struct Device: Identifiable, Equatable {
+    let id: MCPeerID
+    var displayName: String
+    var isConnected: Bool
+
+    static func == (lhs: Device, rhs: Device) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
 final class P2PAudioManager: NSObject, ObservableObject {
     static let shared = P2PAudioManager()
 
@@ -347,6 +357,18 @@ extension P2PAudioManager: MCNearbyServiceBrowserDelegate {
         print("Failed to browse: \(error)")
         DispatchQueue.main.async { [weak self] in
             self?.connectionStatus = .error("浏览失败: \(error.localizedDescription)")
+        }
+    }
+}
+
+extension P2PAudioManager {
+    var devices: [Device] {
+        peers.map { peerID in
+            Device(
+                id: peerID,
+                displayName: peerID.displayName,
+                isConnected: true
+            )
         }
     }
 }
