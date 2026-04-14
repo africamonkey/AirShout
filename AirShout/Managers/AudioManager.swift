@@ -13,6 +13,8 @@ final class AudioManager: ObservableObject {
     private var playerNode: AVAudioPlayerNode?
     private var routeChangeObserver: NSObjectProtocol?
     private var isSessionConfigured = false
+    private var lastAudioLevelUpdate: TimeInterval = 0
+    private let audioLevelUpdateInterval: TimeInterval = 0.05
 
     private let engineQueue = DispatchQueue(label: "com.airshout.audioengine")
 
@@ -86,8 +88,15 @@ final class AudioManager: ObservableObject {
             isSessionConfigured = true
         }
 
-        try engineQueue.sync {
-            try setupAndStartEngine()
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            engineQueue.async {
+                do {
+                    try self.setupAndStartEngine()
+                    continuation.resume()
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
         }
         DispatchQueue.main.async { [weak self] in
             self?.isRunning = true
@@ -168,6 +177,10 @@ final class AudioManager: ObservableObject {
         let rms = sqrt(sum / Float(buffer.frameLength))
         let avgPower = 20 * log10(max(rms, 0.000001))
         let normalizedLevel = max(0, min(1, (avgPower + 50) / 50))
+
+        let now = Date().timeIntervalSinceReferenceDate
+        guard now - lastAudioLevelUpdate >= audioLevelUpdateInterval else { return }
+        lastAudioLevelUpdate = now
 
         DispatchQueue.main.async { [weak self] in
             self?.audioLevel = normalizedLevel
