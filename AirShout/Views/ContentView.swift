@@ -22,10 +22,12 @@ struct ContentView: View {
 
             Spacer()
 
-            ShoutButton(isPressed: viewModel.isShouting) {
-                viewModel.startShout()
-            } onRelease: {
-                viewModel.stopShout()
+            ShoutButton(isActive: viewModel.isShouting) {
+                if viewModel.isShouting {
+                    viewModel.stopShout()
+                } else {
+                    viewModel.startShout()
+                }
             }
 
             Spacer()
