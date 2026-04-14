@@ -30,8 +30,35 @@ final class AudioManager: ObservableObject {
         setupRouteChangeObserver()
     }
 
-    enum AudioError: Error {
+    enum AudioError: Error, LocalizedError {
         case microphonePermissionDenied
+        case engineSetupFailed
+        case noInputAvailable
+        
+        var errorDescription: String? {
+            switch self {
+            case .microphonePermissionDenied:
+                return "麦克风权限被拒绝"
+            case .engineSetupFailed:
+                return "音频引擎设置失败"
+            case .noInputAvailable:
+                return "没有可用的输入设备，请确保已选择音频输出设备"
+            }
+        }
+    }
+    
+    private func hasValidInput() -> Bool {
+        let availableInputs = audioSession.availableInputs
+        return availableInputs != nil && !(availableInputs?.isEmpty ?? true)
+    }
+    
+    private func checkInputAvailability() throws {
+        guard hasValidInput() else {
+            throw AudioError.noInputAvailable
+        }
+        
+        let inputFormat = audioSession.inputDataSource?.dataSourceID
+        print("Available inputs: \(audioSession.availableInputs?.map { $0.portName } ?? []), current input format sample rate: \(audioSession.sampleRate)")
     }
 
     private func requestMicrophonePermission() async -> Bool {
@@ -82,6 +109,10 @@ final class AudioManager: ObservableObject {
             }
         } catch {
             print("Failed to restart engine: \(error)")
+            DispatchQueue.main.async { [weak self] in
+                self?.isRunning = false
+                self?.connectionStatus = .disconnected
+            }
         }
     }
 
@@ -99,20 +130,27 @@ final class AudioManager: ObservableObject {
             isSessionConfigured = true
         }
 
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            engineQueue.async {
-                do {
-                    try self.setupAndStartEngine()
-                    self.saveCurrentDeviceUID()
-                    continuation.resume()
-                } catch {
-                    continuation.resume(throwing: error)
+        do {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                engineQueue.async {
+                    do {
+                        try self.setupAndStartEngine()
+                        self.saveCurrentDeviceUID()
+                        continuation.resume()
+                    } catch {
+                        continuation.resume(throwing: error)
+                    }
                 }
             }
-        }
-        DispatchQueue.main.async { [weak self] in
-            self?.isRunning = true
-            self?.connectionStatus = .connected
+            DispatchQueue.main.async { [weak self] in
+                self?.isRunning = true
+                self?.connectionStatus = .connected
+            }
+        } catch {
+            DispatchQueue.main.async { [weak self] in
+                self?.connectionStatus = .disconnected
+            }
+            throw error
         }
     }
 
@@ -124,20 +162,35 @@ final class AudioManager: ObservableObject {
         audioEngine = nil
         playerNode = nil
 
+        // Check for available input before setting up
+        guard let availableInputs = audioSession.availableInputs, !availableInputs.isEmpty else {
+            throw AudioError.noInputAvailable
+        }
+
         // Create new engine
         audioEngine = AVAudioEngine()
-        guard let audioEngine = audioEngine else { return }
+        guard let audioEngine = audioEngine else {
+            throw AudioError.engineSetupFailed
+        }
 
         let inputNode = audioEngine.inputNode
         let outputNode = audioEngine.outputNode
         let mainMixer = audioEngine.mainMixerNode
 
         playerNode = AVAudioPlayerNode()
-        guard let playerNode = playerNode else { return }
+        guard let playerNode = playerNode else {
+            throw AudioError.engineSetupFailed
+        }
         audioEngine.attach(playerNode)
 
+        // Use the actual input format from the hardware
         let inputFormat = inputNode.outputFormat(forBus: 0)
         let outputFormat = outputNode.inputFormat(forBus: 0)
+
+        // Validate input format - if sample rate is 0, we cannot proceed
+        guard inputFormat.sampleRate > 0 else {
+            throw AudioError.noInputAvailable
+        }
 
         audioEngine.connect(playerNode, to: mainMixer, format: inputFormat)
         audioEngine.connect(mainMixer, to: outputNode, format: outputFormat)
@@ -176,6 +229,11 @@ final class AudioManager: ObservableObject {
             .playAndRecord,
             mode: .default,
             options: [.allowBluetoothA2DP, .allowBluetoothHFP, .allowAirPlay])
+        
+        // Set preferred sample rate before activating
+        let preferredSampleRate: Double = 44100
+        try audioSession.setPreferredSampleRate(preferredSampleRate)
+        
         try audioSession.setActive(true)
     }
 
