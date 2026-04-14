@@ -3,13 +3,20 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var viewModel = ShoutViewModel()
     @State private var showingAirPlayPicker = false
+    @State private var showOnboarding = !AppPreferences.hasCompletedOnboarding
 
     var body: some View {
         VStack(spacing: 24) {
-            Text("AirShout")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .padding(.top, 20)
+            HStack {
+                Text("AirShout")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+
+                Spacer()
+
+                ConnectionStatusView(status: viewModel.connectionStatus)
+            }
+            .padding(.top, 20)
 
             DeviceListView {
                 showingAirPlayPicker = true
@@ -55,6 +62,12 @@ struct ContentView: View {
                 }
                 .padding()
             }
+        }
+        .sheet(isPresented: $showOnboarding) {
+            OnboardingView(isPresented: $showOnboarding)
+                .onDisappear {
+                    AppPreferences.hasCompletedOnboarding = true
+                }
         }
     }
 }

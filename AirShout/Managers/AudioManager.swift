@@ -7,6 +7,14 @@ final class AudioManager: ObservableObject {
 
     @Published var audioLevel: Float = 0
     @Published var isRunning: Bool = false
+    @Published var connectionStatus: ConnectionStatus = .disconnected
+
+    enum ConnectionStatus {
+        case disconnected
+        case connecting
+        case connected
+        case transmitting
+    }
 
     private var audioEngine: AVAudioEngine?
     private let audioSession = AVAudioSession.sharedInstance()
@@ -78,8 +86,11 @@ final class AudioManager: ObservableObject {
     }
 
     func start() async throws {
+        connectionStatus = .connecting
+        
         let granted = await requestMicrophonePermission()
         guard granted else {
+            connectionStatus = .disconnected
             throw AudioError.microphonePermissionDenied
         }
         
@@ -101,6 +112,7 @@ final class AudioManager: ObservableObject {
         }
         DispatchQueue.main.async { [weak self] in
             self?.isRunning = true
+            self?.connectionStatus = .connected
         }
     }
 
@@ -154,6 +166,7 @@ final class AudioManager: ObservableObject {
             DispatchQueue.main.async { [weak self] in
                 self?.isRunning = false
                 self?.audioLevel = 0
+                self?.connectionStatus = .disconnected
             }
         }
     }
@@ -190,6 +203,9 @@ final class AudioManager: ObservableObject {
 
         DispatchQueue.main.async { [weak self] in
             self?.audioLevel = normalizedLevel
+            if self?.connectionStatus != .transmitting && normalizedLevel > 0.01 {
+                self?.connectionStatus = .transmitting
+            }
         }
     }
 }

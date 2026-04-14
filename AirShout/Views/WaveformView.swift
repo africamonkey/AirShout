@@ -39,6 +39,7 @@ struct WaveformBar: View {
             RoundedRectangle(cornerRadius: 2)
                 .fill(isHighlighted ? Color.accentColor : Color.gray.opacity(0.3))
                 .frame(height: geometry.size.height * CGFloat(max(0.05, level)))
+                .animation(.easeInOut(duration: 0.05), value: level)
         }
     }
 }

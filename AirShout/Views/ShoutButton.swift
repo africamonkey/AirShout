@@ -13,7 +13,7 @@ struct ShoutButton: View {
             Circle()
                 .fill(isActive ? Color.red : Color.accentColor)
                 .frame(width: 120, height: 120)
-                .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
+                .shadow(color: isActive ? .red.opacity(0.6) : .black.opacity(0.2), radius: isActive ? 25 : 10, x: 0, y: 5)
 
             Circle()
                 .stroke(Color.white.opacity(0.3), lineWidth: 3)

@@ -4,6 +4,7 @@ import AVFAudio
 struct DeviceListView: View {
     let onSelectTapped: () -> Void
     @State private var currentRouteName: String = "未选择设备"
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -20,7 +21,7 @@ struct DeviceListView: View {
             }
             .padding(.horizontal)
             .padding(.vertical, 8)
-            .background(Color(.systemGray6))
+            .background(colorScheme == .dark ? Color.black.opacity(0.3) : Color(.systemGray6))
             .cornerRadius(8)
 
             Text(currentRouteName)

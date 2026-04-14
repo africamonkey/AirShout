@@ -5,6 +5,7 @@ final class ShoutViewModel: ObservableObject {
     @Published var audioLevel: Float = 0
     @Published var isShouting: Bool = false
     @Published var showPermissionAlert: Bool = false
+    @Published var connectionStatus: AudioManager.ConnectionStatus = .disconnected
 
     private let audioManager = AudioManager.shared
     private var cancellables = Set<AnyCancellable>()
@@ -21,6 +22,10 @@ final class ShoutViewModel: ObservableObject {
         audioManager.$isRunning
             .receive(on: DispatchQueue.main)
             .assign(to: &$isShouting)
+
+        audioManager.$connectionStatus
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$connectionStatus)
     }
 
     func startShout() {
