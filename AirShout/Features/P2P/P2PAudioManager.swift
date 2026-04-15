@@ -120,29 +120,16 @@ final class P2PAudioManager: NSObject, AudioManaging {
         }
         
         let inputNode = audioEngine.inputNode
-        let outputNode = audioEngine.outputNode
-        let mainMixer = audioEngine.mainMixerNode
-        
-        playerNode = AVAudioPlayerNode()
-        guard let playerNode = playerNode else {
-            throw AudioError.engineSetupFailed
-        }
-        audioEngine.attach(playerNode)
         
         let inputFormat = inputNode.outputFormat(forBus: 0)
-        let outputFormat = outputNode.inputFormat(forBus: 0)
         
         guard inputFormat.sampleRate > 0 else {
             throw AudioError.engineSetupFailed
         }
         
-        audioEngine.connect(playerNode, to: mainMixer, format: inputFormat)
-        audioEngine.connect(mainMixer, to: outputNode, format: outputFormat)
-        
         let connectedPeers = session.connectedPeers
         let levelProcessor = self.levelProcessor
-        var isRunning = _audioEngineRunning
-        let capturedPlayerNode = self.playerNode
+        let isRunning = true
         
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { [weak self] buffer, _ in
             guard let self = self else { return }
@@ -162,13 +149,10 @@ final class P2PAudioManager: NSObject, AudioManaging {
             } catch {
                 print("Failed to send audio data: \(error)")
             }
-            
-            capturedPlayerNode?.scheduleBuffer(buffer, completionHandler: nil)
         }
         
         audioEngine.prepare()
         try audioEngine.start()
-        playerNode.play()
     }
     
     private func setupAudioEngineForReceiving() {

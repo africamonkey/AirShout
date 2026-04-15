@@ -105,8 +105,7 @@ final class AirPlayAudioManager: AudioManaging {
             engineQueue.async {
                 do {
                     try self.setupAndStartEngine()
-                    // TODO: UserPreferences will be implemented in Task 4
-                    // UserPreferences.shared.saveCurrentDeviceUID()
+                    UserPreferences.shared.saveCurrentDeviceUID()
                     continuation.resume()
                 } catch {
                     continuation.resume(throwing: error)
