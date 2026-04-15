@@ -156,7 +156,7 @@ final class AirPlayAudioManager: AudioManaging {
         audioEngine.connect(mainMixer, to: outputNode, format: outputFormat)
         
         let levelProcessor = self.levelProcessor
-        let isRunning = self.isRunning
+        let isRunning = true
         let capturedPlayerNode = self.playerNode
         let connectionStatus = self.connectionStatus
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { [weak self] buffer, _ in
