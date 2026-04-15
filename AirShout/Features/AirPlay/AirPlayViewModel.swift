@@ -4,6 +4,7 @@ import Combine
 final class AirPlayViewModel: ObservableObject {
     @Published var audioLevel: Float = 0
     @Published var isShouting: Bool = false
+    @Published var isStarting: Bool = false
     @Published var showPermissionAlert: Bool = false
     @Published var connectionStatus: ConnectionStatus = .disconnected
     
@@ -30,6 +31,8 @@ final class AirPlayViewModel: ObservableObject {
     }
     
     func startShout() {
+        guard !isStarting else { return }
+        isStarting = true
         Task { @MainActor in
             do {
                 try await audioManager.start()
@@ -37,7 +40,9 @@ final class AirPlayViewModel: ObservableObject {
                 showPermissionAlert = true
             } catch {
                 print("Failed to start audio: \(error)")
+                connectionStatus = .error(error.localizedDescription)
             }
+            isStarting = false
         }
     }
     
