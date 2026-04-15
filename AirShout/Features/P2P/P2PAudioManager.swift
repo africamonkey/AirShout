@@ -36,6 +36,7 @@ final class P2PAudioManager: NSObject, AudioManaging {
     private var _audioEngineRunning = false
     private let stateQueue = DispatchQueue(label: "com.airshout.p2pstate")
     private var invitedPeers: Set<MCPeerID> = []
+    private let invitedPeersQueue = DispatchQueue(label: "com.airshout.p2pinvitedpeers")
     
     private override init() {
         super.init()
@@ -140,10 +141,12 @@ final class P2PAudioManager: NSObject, AudioManaging {
         
         let connectedPeers = session.connectedPeers
         let levelProcessor = self.levelProcessor
+        var isRunning = _audioEngineRunning
+        let capturedPlayerNode = self.playerNode
         
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { [weak self] buffer, _ in
             guard let self = self else { return }
-            guard self._audioEngineRunning else { return }
+            guard isRunning else { return }
             guard !connectedPeers.isEmpty else { return }
             
             self.processAudioLevel(buffer, processor: levelProcessor)
@@ -160,7 +163,7 @@ final class P2PAudioManager: NSObject, AudioManaging {
                 print("Failed to send audio data: \(error)")
             }
             
-            self.playerNode?.scheduleBuffer(buffer, completionHandler: nil)
+            capturedPlayerNode?.scheduleBuffer(buffer, completionHandler: nil)
         }
         
         audioEngine.prepare()
@@ -252,7 +255,9 @@ final class P2PAudioManager: NSObject, AudioManaging {
         advertiser?.stopAdvertisingPeer()
         browser?.stopBrowsingForPeers()
         session?.disconnect()
-        invitedPeers.removeAll()
+        invitedPeersQueue.async { [weak self] in
+            self?.invitedPeers.removeAll()
+        }
         
         DispatchQueue.main.async { [weak self] in
             self?.peers = []
@@ -264,7 +269,9 @@ final class P2PAudioManager: NSObject, AudioManaging {
         browser?.stopBrowsingForPeers()
         advertiser?.stopAdvertisingPeer()
         session?.disconnect()
-        invitedPeers.removeAll()
+        invitedPeersQueue.async { [weak self] in
+            self?.invitedPeers.removeAll()
+        }
         peers.removeAll()
         
         setupMultipeer()
@@ -312,7 +319,9 @@ extension P2PAudioManager: MCSessionDelegate {
             switch state {
             case .notConnected:
                 self?.peers.removeAll { $0 == peerID }
-                self?.invitedPeers.remove(peerID)
+                self?.invitedPeersQueue.async {
+                    self?.invitedPeers.remove(peerID)
+                }
                 if self?.peers.isEmpty == true {
                     self?.connectionStatus = .disconnected
                     self?.stopAudioEngineForReceiving()
@@ -355,16 +364,20 @@ extension P2PAudioManager: MCNearbyServiceAdvertiserDelegate {
 
 extension P2PAudioManager: MCNearbyServiceBrowserDelegate {
     func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
-        if !invitedPeers.contains(peerID) && session.connectedPeers.isEmpty {
-            invitedPeers.insert(peerID)
-            browser.invitePeer(peerID, to: session, withContext: nil, timeout: 30)
+        invitedPeersQueue.async { [weak self] in
+            guard let self = self else { return }
+            guard !self.invitedPeers.contains(peerID) && self.session.connectedPeers.isEmpty else { return }
+            self.invitedPeers.insert(peerID)
+            browser.invitePeer(peerID, to: self.session, withContext: nil, timeout: 30)
         }
     }
     
     func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
         DispatchQueue.main.async { [weak self] in
             self?.peers.removeAll { $0 == peerID }
-            self?.invitedPeers.remove(peerID)
+            self?.invitedPeersQueue.async {
+                self?.invitedPeers.remove(peerID)
+            }
             if self?.peers.isEmpty == true {
                 self?.connectionStatus = .disconnected
             }
