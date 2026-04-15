@@ -172,38 +172,41 @@ final class P2PAudioManager: NSObject, AudioManaging {
     }
     
     private func setupAudioEngineForReceiving() {
-        guard audioEngine == nil else { return }
-        
-        do {
-            try AudioSessionConfig.configure(audioSession)
-        } catch {
-            print("Failed to configure audio session for receiving: \(error)")
-            return
+        engineQueue.async { [weak self] in
+            guard let self = self else { return }
+            guard self.audioEngine == nil else { return }
+            
+            do {
+                try AudioSessionConfig.configure(self.audioSession)
+            } catch {
+                print("Failed to configure audio session for receiving: \(error)")
+                return
+            }
+            
+            self.audioEngine = AVAudioEngine()
+            guard let audioEngine = self.audioEngine else { return }
+            
+            let outputNode = audioEngine.outputNode
+            let mainMixer = audioEngine.mainMixerNode
+            
+            self.playerNode = AVAudioPlayerNode()
+            guard let playerNode = self.playerNode else { return }
+            audioEngine.attach(playerNode)
+            
+            let outputFormat = outputNode.inputFormat(forBus: 0)
+            
+            audioEngine.connect(playerNode, to: mainMixer, format: outputFormat)
+            audioEngine.connect(mainMixer, to: outputNode, format: outputFormat)
+            
+            audioEngine.prepare()
+            do {
+                try audioEngine.start()
+            } catch {
+                print("Failed to start audio engine for receiving: \(error)")
+                return
+            }
+            playerNode.play()
         }
-        
-        audioEngine = AVAudioEngine()
-        guard let audioEngine = audioEngine else { return }
-        
-        let outputNode = audioEngine.outputNode
-        let mainMixer = audioEngine.mainMixerNode
-        
-        playerNode = AVAudioPlayerNode()
-        guard let playerNode = playerNode else { return }
-        audioEngine.attach(playerNode)
-        
-        let outputFormat = outputNode.inputFormat(forBus: 0)
-        
-        audioEngine.connect(playerNode, to: mainMixer, format: outputFormat)
-        audioEngine.connect(mainMixer, to: outputNode, format: outputFormat)
-        
-        audioEngine.prepare()
-        do {
-            try audioEngine.start()
-        } catch {
-            print("Failed to start audio engine for receiving: \(error)")
-            return
-        }
-        playerNode.play()
     }
     
     private func stopAudioEngineForReceiving() {
@@ -335,7 +338,9 @@ extension P2PAudioManager: MCSessionDelegate {
                     self?.peers.append(peerID)
                 }
                 self?.connectionStatus = .connected
-                self?.setupAudioEngineForReceiving()
+                self?.engineQueue.async {
+                    self?.setupAudioEngineForReceiving()
+                }
             @unknown default:
                 break
             }
