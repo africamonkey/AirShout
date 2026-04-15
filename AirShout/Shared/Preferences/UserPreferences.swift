@@ -11,15 +11,19 @@ final class UserPreferences {
         static let p2pNickname = "com.airshout.p2pNickname"
     }
     
-    private init() {}
+    private let deviceName: String
+    
+    private init() {
+        deviceName = UIDevice.current.name
+    }
     
     var hasCompletedOnboarding: Bool {
-        get { UserDefaults.standard.bool(forKey: Keys.hasCompletedOnboarding) }
+        get { UserDefaults.standard.object(forKey: Keys.hasCompletedOnboarding) as? Bool ?? false }
         set { UserDefaults.standard.set(newValue, forKey: Keys.hasCompletedOnboarding) }
     }
     
     var p2pNickname: String {
-        get { UserDefaults.standard.string(forKey: Keys.p2pNickname) ?? UIDevice.current.name }
+        get { UserDefaults.standard.string(forKey: Keys.p2pNickname) ?? deviceName }
         set { UserDefaults.standard.set(newValue, forKey: Keys.p2pNickname) }
     }
     
@@ -40,7 +44,7 @@ final class UserPreferences {
         save(deviceUID: deviceUID)
     }
     
-    func restoreDeviceIfNeeded() async -> Bool {
+    func restoreDeviceIfNeeded() -> Bool {
         guard let savedUID = loadDeviceUID() else { return false }
         let session = AVAudioSession.sharedInstance()
         let currentRoute = session.currentRoute
