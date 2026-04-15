@@ -66,6 +66,7 @@ final class P2PAudioManager: NSObject, ObservableObject {
     
     private var _audioEngineRunning = false
     private let stateQueue = DispatchQueue(label: "com.airshout.p2pstate")
+    private var invitedPeers: Set<MCPeerID> = []
 
     private override init() {
         super.init()
@@ -169,6 +170,48 @@ final class P2PAudioManager: NSObject, ObservableObject {
         playerNode.play()
     }
 
+    private func setupAudioEngineForReceiving() {
+        guard audioEngine == nil else { return }
+
+        do {
+            try configureAudioSession()
+        } catch {
+            print("Failed to configure audio session for receiving: \(error)")
+            return
+        }
+
+        audioEngine = AVAudioEngine()
+        guard let audioEngine = audioEngine else { return }
+
+        let outputNode = audioEngine.outputNode
+        let mainMixer = audioEngine.mainMixerNode
+
+        playerNode = AVAudioPlayerNode()
+        guard let playerNode = playerNode else { return }
+        audioEngine.attach(playerNode)
+
+        let outputFormat = outputNode.inputFormat(forBus: 0)
+
+        audioEngine.connect(playerNode, to: mainMixer, format: outputFormat)
+        audioEngine.connect(mainMixer, to: outputNode, format: outputFormat)
+
+        audioEngine.prepare()
+        do {
+            try audioEngine.start()
+        } catch {
+            print("Failed to start audio engine for receiving: \(error)")
+            return
+        }
+        playerNode.play()
+    }
+
+    private func stopAudioEngineForReceiving() {
+        playerNode?.stop()
+        audioEngine?.stop()
+        audioEngine = nil
+        playerNode = nil
+    }
+
     private func processAudioLevel(_ buffer: AVAudioPCMBuffer) {
         guard let channelData = buffer.floatChannelData else { return }
         let channelDataValue = channelData.pointee
@@ -212,13 +255,16 @@ final class P2PAudioManager: NSObject, ObservableObject {
 
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             engineQueue.async {
+                self.stateQueue.async {
+                    self._audioEngineRunning = true
+                }
                 do {
                     try self.setupAudioEngineForSpeaking()
-                    self.stateQueue.async {
-                        self._audioEngineRunning = true
-                    }
                     continuation.resume()
                 } catch {
+                    self.stateQueue.async {
+                        self._audioEngineRunning = false
+                    }
                     continuation.resume(throwing: error)
                 }
             }
@@ -258,6 +304,7 @@ final class P2PAudioManager: NSObject, ObservableObject {
         advertiser?.stopAdvertisingPeer()
         browser?.stopBrowsingForPeers()
         session?.disconnect()
+        invitedPeers.removeAll()
 
         DispatchQueue.main.async { [weak self] in
             self?.peers = []
@@ -296,8 +343,10 @@ extension P2PAudioManager: MCSessionDelegate {
             switch state {
             case .notConnected:
                 self?.peers.removeAll { $0 == peerID }
+                self?.invitedPeers.remove(peerID)
                 if self?.peers.isEmpty == true {
                     self?.connectionStatus = .disconnected
+                    self?.stopAudioEngineForReceiving()
                 }
             case .connecting:
                 self?.connectionStatus = .connecting
@@ -306,6 +355,7 @@ extension P2PAudioManager: MCSessionDelegate {
                     self?.peers.append(peerID)
                 }
                 self?.connectionStatus = .connected
+                self?.setupAudioEngineForReceiving()
             @unknown default:
                 break
             }
@@ -341,12 +391,16 @@ extension P2PAudioManager: MCNearbyServiceAdvertiserDelegate {
 
 extension P2PAudioManager: MCNearbyServiceBrowserDelegate {
     func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
-        browser.invitePeer(peerID, to: session, withContext: nil, timeout: 30)
+        if !invitedPeers.contains(peerID) && session.connectedPeers.isEmpty {
+            invitedPeers.insert(peerID)
+            browser.invitePeer(peerID, to: session, withContext: nil, timeout: 30)
+        }
     }
 
     func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
         DispatchQueue.main.async { [weak self] in
             self?.peers.removeAll { $0 == peerID }
+            self?.invitedPeers.remove(peerID)
             if self?.peers.isEmpty == true {
                 self?.connectionStatus = .disconnected
             }
