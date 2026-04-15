@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ConnectionStatusView: View {
-    let status: AudioManager.ConnectionStatus
+    let status: ConnectionStatus
 
     var body: some View {
         HStack(spacing: 8) {

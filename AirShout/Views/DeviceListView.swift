@@ -32,23 +32,11 @@ struct DeviceListView: View {
         )
         .onAppear {
             updateRouteName()
-            setupRouteObserver()
         }
     }
 
     private func updateRouteName() {
-        let session = AVAudioSession.sharedInstance()
-        currentRouteName = session.currentRoute.outputs.first?.portName ?? "未选择设备"
-    }
-
-    private func setupRouteObserver() {
-        NotificationCenter.default.addObserver(
-            forName: AVAudioSession.routeChangeNotification,
-            object: nil,
-            queue: .main
-        ) { _ in
-            updateRouteName()
-        }
+        currentRouteName = AVAudioSession.sharedInstance().currentRoute.outputs.first?.portName ?? "未选择设备"
     }
 }
 

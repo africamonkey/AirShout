@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import MultipeerConnectivity
 
 final class P2PViewModel: ObservableObject {
     @Published var audioLevel: Float = 0

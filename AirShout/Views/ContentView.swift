@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var viewModel = ShoutViewModel()
-    @State private var showOnboarding = !AppPreferences.hasCompletedOnboarding
+    @StateObject private var viewModel = AirPlayViewModel()
+    @State private var showOnboarding = !UserPreferences.shared.hasCompletedOnboarding
 
     var body: some View {
         ZStack {
@@ -65,7 +65,7 @@ struct ContentView: View {
         .sheet(isPresented: $showOnboarding) {
             OnboardingView(isPresented: $showOnboarding)
                 .onDisappear {
-                    AppPreferences.hasCompletedOnboarding = true
+                    UserPreferences.shared.hasCompletedOnboarding = true
                 }
         }
     }

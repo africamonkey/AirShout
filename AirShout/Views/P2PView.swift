@@ -10,7 +10,7 @@ struct P2PView: View {
                     .font(.headline)
                 Spacer()
                 Button {
-                    viewModel.refreshDevices()
+                    viewModel.restartDiscovery()
                 } label: {
                     Image(systemName: "arrow.clockwise")
                         .foregroundColor(.blue)
@@ -27,12 +27,12 @@ struct P2PView: View {
             Spacer()
 
             ShoutButton(
-                isActive: viewModel.isSpeaking,
+                isActive: viewModel.isShouting,
                 onTap: {
-                    if viewModel.isSpeaking {
-                        viewModel.stopSpeaking()
+                    if viewModel.isShouting {
+                        viewModel.stopShout()
                     } else {
-                        viewModel.startSpeaking()
+                        viewModel.startShout()
                     }
                 }
             )
@@ -55,7 +55,7 @@ struct P2PView: View {
 }
 
 struct DeviceRow: View {
-    let device: Device
+    let device: P2PDevice
 
     var body: some View {
         HStack {
