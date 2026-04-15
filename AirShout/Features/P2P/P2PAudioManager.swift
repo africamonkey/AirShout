@@ -207,10 +207,12 @@ final class P2PAudioManager: NSObject, AudioManaging {
     }
     
     private func stopAudioEngineForReceiving() {
-        playerNode?.stop()
-        audioEngine?.stop()
-        audioEngine = nil
-        playerNode = nil
+        engineQueue.async { [weak self] in
+            self?.playerNode?.stop()
+            self?.audioEngine?.stop()
+            self?.audioEngine = nil
+            self?.playerNode = nil
+        }
     }
     
     private func processAudioLevel(_ buffer: AVAudioPCMBuffer, processor: AudioLevelProcessor) {
