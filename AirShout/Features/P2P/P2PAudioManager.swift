@@ -186,7 +186,9 @@ final class P2PAudioManager: NSObject, AudioManaging {
     func shutdown() {
         stop()
         stopReceiverEngine()
+        advertiser?.delegate = nil
         advertiser?.stopAdvertisingPeer()
+        browser?.delegate = nil
         browser?.stopBrowsingForPeers()
         session?.disconnect()
         invitedPeersQueue.async { [weak self] in
@@ -200,7 +202,9 @@ final class P2PAudioManager: NSObject, AudioManaging {
     }
     
     func restartBrowsing() {
+        browser?.delegate = nil
         browser?.stopBrowsingForPeers()
+        advertiser?.delegate = nil
         advertiser?.stopAdvertisingPeer()
         session?.disconnect()
         invitedPeersQueue.async { [weak self] in
