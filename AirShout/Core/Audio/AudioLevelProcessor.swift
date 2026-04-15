@@ -1,7 +1,7 @@
 import Foundation
 import AVFAudio
 
-struct AudioLevelProcessor {
+final class AudioLevelProcessor {
     private var lastUpdateTime: TimeInterval = 0
     private let updateInterval: TimeInterval = 0.05
     
@@ -19,7 +19,7 @@ struct AudioLevelProcessor {
         return max(0, min(1, (avgPower + 50) / 50))
     }
     
-    mutating func shouldUpdate(now: TimeInterval) -> Bool {
+    func shouldUpdate(now: TimeInterval) -> Bool {
         guard now - lastUpdateTime >= updateInterval else { return false }
         lastUpdateTime = now
         return true
