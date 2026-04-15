@@ -1,26 +1,26 @@
 import Testing
 @testable import AirShout
 
-struct AudioManagerTests {
+struct DevicePreferencesTests {
 
     @Test func testDevicePreferencesSaveAndLoad() {
         let testUID = "test-device-uid-123"
-        DevicePreferences.save(deviceUID: testUID)
-        let loadedUID = DevicePreferences.load()
+        UserPreferences.shared.save(deviceUID: testUID)
+        let loadedUID = UserPreferences.shared.loadDeviceUID()
         #expect(loadedUID == testUID)
-        DevicePreferences.clear()
+        UserPreferences.shared.clear()
     }
 
     @Test func testDevicePreferencesClear() {
-        DevicePreferences.save(deviceUID: "some-uid")
-        DevicePreferences.clear()
-        let loadedUID = DevicePreferences.load()
+        UserPreferences.shared.save(deviceUID: "some-uid")
+        UserPreferences.shared.clear()
+        let loadedUID = UserPreferences.shared.loadDeviceUID()
         #expect(loadedUID == nil)
     }
 
     @Test func testDevicePreferencesLoadWhenEmpty() {
-        DevicePreferences.clear()
-        let loadedUID = DevicePreferences.load()
+        UserPreferences.shared.clear()
+        let loadedUID = UserPreferences.shared.loadDeviceUID()
         #expect(loadedUID == nil)
     }
 }
