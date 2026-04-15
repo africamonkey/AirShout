@@ -34,6 +34,7 @@ final class P2PAudioManager: NSObject, AudioManaging {
     private let levelProcessor = AudioLevelProcessor()
     
     private var _audioEngineRunning = false
+    private var _isReceivingEngineReady = false
     private let stateQueue = DispatchQueue(label: "com.airshout.p2pstate")
     private var invitedPeers: Set<MCPeerID> = []
     private let invitedPeersQueue = DispatchQueue(label: "com.airshout.p2pinvitedpeers")
@@ -190,11 +191,13 @@ final class P2PAudioManager: NSObject, AudioManaging {
                 return
             }
             playerNode.play()
+            self._isReceivingEngineReady = true
         }
     }
     
     private func stopAudioEngineForReceiving() {
-        engineQueue.async { [weak self] in
+        engineQueue.sync { [weak self] in
+            self?._isReceivingEngineReady = false
             self?.playerNode?.stop()
             self?.audioEngine?.stop()
             self?.audioEngine = nil
@@ -268,7 +271,8 @@ final class P2PAudioManager: NSObject, AudioManaging {
     
     private func playAudioData(_ data: Data) {
         engineQueue.async { [weak self] in
-            guard let self = self, let audioEngine = self.audioEngine else { return }
+            guard let self = self, self._isReceivingEngineReady else { return }
+            guard let audioEngine = self.audioEngine else { return }
             guard let playerNode = self.playerNode else { return }
             
             let frameCount = AVAudioFrameCount(data.count / MemoryLayout<Float>.size)
