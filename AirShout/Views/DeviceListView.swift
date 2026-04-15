@@ -4,6 +4,7 @@ import AVFAudio
 
 struct DeviceListView: View {
     @State private var currentRouteName: String = "未选择设备"
+    @State private var routeChangeObserver: NSObjectProtocol?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -32,6 +33,18 @@ struct DeviceListView: View {
         )
         .onAppear {
             updateRouteName()
+            routeChangeObserver = NotificationCenter.default.addObserver(
+                forName: AVAudioSession.routeChangeNotification,
+                object: nil,
+                queue: .main
+            ) { _ in
+                updateRouteName()
+            }
+        }
+        .onDisappear {
+            if let observer = routeChangeObserver {
+                NotificationCenter.default.removeObserver(observer)
+            }
         }
     }
 
