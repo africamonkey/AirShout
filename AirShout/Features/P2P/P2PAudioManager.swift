@@ -27,15 +27,16 @@ final class P2PAudioManager: NSObject, AudioManaging {
     private var advertiser: MCNearbyServiceAdvertiser!
     private var browser: MCNearbyServiceBrowser!
     
-    private var audioEngine: AVAudioEngine?
     private let audioSession = AVAudioSession.sharedInstance()
-    private var playerNode: AVAudioPlayerNode?
-    private let engineQueue = DispatchQueue(label: "com.airshout.p2paudioengine")
-    private let levelProcessor = AudioLevelProcessor()
     
-    private var _audioEngineRunning = false
-    private var _isReceivingEngineReady = false
-    private let stateQueue = DispatchQueue(label: "com.airshout.p2pstate")
+    private var receiverEngine: AVAudioEngine?
+    private var receiverPlayerNode: AVAudioPlayerNode?
+    private let receiverQueue = DispatchQueue(label: "com.airshout.p2p.receiver")
+    
+    private var senderEngine: AVAudioEngine?
+    private let senderQueue = DispatchQueue(label: "com.airshout.p2p.sender")
+    
+    private let levelProcessor = AudioLevelProcessor()
     private var invitedPeers: Set<MCPeerID> = []
     private let invitedPeersQueue = DispatchQueue(label: "com.airshout.p2pinvitedpeers")
     
@@ -87,17 +88,11 @@ final class P2PAudioManager: NSObject, AudioManaging {
         }
         
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            engineQueue.async {
-                self.stateQueue.async {
-                    self._audioEngineRunning = true
-                }
+            senderQueue.async {
                 do {
-                    try self.setupAudioEngineForSpeaking()
+                    try self.setupSenderEngine()
                     continuation.resume()
                 } catch {
-                    self.stateQueue.async {
-                        self._audioEngineRunning = false
-                    }
                     continuation.resume(throwing: error)
                 }
             }
@@ -109,19 +104,17 @@ final class P2PAudioManager: NSObject, AudioManaging {
         }
     }
     
-    private func setupAudioEngineForSpeaking() throws {
-        audioEngine?.inputNode.removeTap(onBus: 0)
-        audioEngine?.stop()
-        audioEngine = nil
-        playerNode = nil
+    private func setupSenderEngine() throws {
+        senderEngine?.inputNode.removeTap(onBus: 0)
+        senderEngine?.stop()
+        senderEngine = nil
         
-        audioEngine = AVAudioEngine()
-        guard let audioEngine = audioEngine else {
+        senderEngine = AVAudioEngine()
+        guard let senderEngine = senderEngine else {
             throw AudioError.engineSetupFailed
         }
         
-        let inputNode = audioEngine.inputNode
-        
+        let inputNode = senderEngine.inputNode
         let inputFormat = inputNode.outputFormat(forBus: 0)
         
         guard inputFormat.sampleRate > 0 else {
@@ -130,11 +123,9 @@ final class P2PAudioManager: NSObject, AudioManaging {
         
         let connectedPeers = session.connectedPeers
         let levelProcessor = self.levelProcessor
-        let isRunning = true
         
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { [weak self] buffer, _ in
             guard let self = self else { return }
-            guard isRunning else { return }
             guard !connectedPeers.isEmpty else { return }
             
             self.processAudioLevel(buffer, processor: levelProcessor)
@@ -152,57 +143,14 @@ final class P2PAudioManager: NSObject, AudioManaging {
             }
         }
         
-        audioEngine.prepare()
-        try audioEngine.start()
+        senderEngine.prepare()
+        try senderEngine.start()
     }
     
-    private func setupAudioEngineForReceiving() {
-        engineQueue.async { [weak self] in
-            guard let self = self else { return }
-            guard self.audioEngine == nil else { return }
-            
-            do {
-                try AudioSessionConfig.configure(self.audioSession)
-            } catch {
-                print("Failed to configure audio session for receiving: \(error)")
-                return
-            }
-            
-            self.audioEngine = AVAudioEngine()
-            guard let audioEngine = self.audioEngine else { return }
-            
-            let outputNode = audioEngine.outputNode
-            let mainMixer = audioEngine.mainMixerNode
-            
-            self.playerNode = AVAudioPlayerNode()
-            guard let playerNode = self.playerNode else { return }
-            audioEngine.attach(playerNode)
-            
-            let outputFormat = outputNode.inputFormat(forBus: 0)
-            
-            audioEngine.connect(playerNode, to: mainMixer, format: outputFormat)
-            audioEngine.connect(mainMixer, to: outputNode, format: outputFormat)
-            
-            audioEngine.prepare()
-            do {
-                try audioEngine.start()
-            } catch {
-                print("Failed to start audio engine for receiving: \(error)")
-                return
-            }
-            playerNode.play()
-            self._isReceivingEngineReady = true
-        }
-    }
-    
-    private func stopAudioEngineForReceiving() {
-        engineQueue.sync { [weak self] in
-            self?._isReceivingEngineReady = false
-            self?.playerNode?.stop()
-            self?.audioEngine?.stop()
-            self?.audioEngine = nil
-            self?.playerNode = nil
-        }
+    private func stopSenderEngine() {
+        senderEngine?.inputNode.removeTap(onBus: 0)
+        senderEngine?.stop()
+        senderEngine = nil
     }
     
     private func processAudioLevel(_ buffer: AVAudioPCMBuffer, processor: AudioLevelProcessor) {
@@ -220,15 +168,8 @@ final class P2PAudioManager: NSObject, AudioManaging {
     }
     
     func stop() {
-        engineQueue.async { [weak self] in
-            self?.stateQueue.async {
-                self?._audioEngineRunning = false
-            }
-            self?.playerNode?.stop()
-            self?.audioEngine?.inputNode.removeTap(onBus: 0)
-            self?.audioEngine?.stop()
-            self?.audioEngine = nil
-            self?.playerNode = nil
+        senderQueue.async { [weak self] in
+            self?.stopSenderEngine()
             
             DispatchQueue.main.async { [weak self] in
                 self?.isRunning = false
@@ -244,6 +185,7 @@ final class P2PAudioManager: NSObject, AudioManaging {
     
     func shutdown() {
         stop()
+        stopReceiverEngine()
         advertiser?.stopAdvertisingPeer()
         browser?.stopBrowsingForPeers()
         session?.disconnect()
@@ -269,14 +211,63 @@ final class P2PAudioManager: NSObject, AudioManaging {
         setupMultipeer()
     }
     
+    private func startReceiverEngine() {
+        receiverQueue.async { [weak self] in
+            guard let self = self else { return }
+            guard self.receiverEngine == nil else { return }
+            
+            do {
+                try AudioSessionConfig.configure(self.audioSession)
+            } catch {
+                print("Failed to configure audio session for receiving: \(error)")
+                return
+            }
+            
+            self.receiverEngine = AVAudioEngine()
+            guard let receiverEngine = self.receiverEngine else { return }
+            
+            let outputNode = receiverEngine.outputNode
+            let mainMixer = receiverEngine.mainMixerNode
+            
+            self.receiverPlayerNode = AVAudioPlayerNode()
+            guard let receiverPlayerNode = self.receiverPlayerNode else { return }
+            receiverEngine.attach(receiverPlayerNode)
+            
+            let outputFormat = outputNode.inputFormat(forBus: 0)
+            
+            receiverEngine.connect(receiverPlayerNode, to: mainMixer, format: outputFormat)
+            receiverEngine.connect(mainMixer, to: outputNode, format: outputFormat)
+            
+            receiverEngine.prepare()
+            do {
+                try receiverEngine.start()
+            } catch {
+                print("Failed to start receiver engine: \(error)")
+                return
+            }
+            receiverPlayerNode.play()
+        }
+    }
+    
+    private func stopReceiverEngine() {
+        receiverQueue.sync { [weak self] in
+            self?.receiverPlayerNode?.stop()
+            self?.receiverEngine?.stop()
+            self?.receiverEngine = nil
+            self?.receiverPlayerNode = nil
+        }
+    }
+    
     private func playAudioData(_ data: Data) {
-        engineQueue.async { [weak self] in
-            guard let self = self, self._isReceivingEngineReady else { return }
-            guard let audioEngine = self.audioEngine else { return }
-            guard let playerNode = self.playerNode else { return }
+        receiverQueue.async { [weak self] in
+            guard let self = self else { return }
+            guard let receiverEngine = self.receiverEngine else {
+                return
+            }
+            guard let receiverPlayerNode = self.receiverPlayerNode else { return }
             
             let frameCount = AVAudioFrameCount(data.count / MemoryLayout<Float>.size)
-            guard let buffer = AVAudioPCMBuffer(pcmFormat: audioEngine.mainMixerNode.outputFormat(forBus: 0), frameCapacity: frameCount) else {
+            guard let buffer = AVAudioPCMBuffer(pcmFormat: receiverEngine.mainMixerNode.outputFormat(forBus: 0), frameCapacity: frameCount) else {
                 return
             }
             
@@ -287,9 +278,9 @@ final class P2PAudioManager: NSObject, AudioManaging {
                 memcpy(buffer.floatChannelData?[0], baseAddress, data.count)
             }
             
-            playerNode.scheduleBuffer(buffer, completionHandler: nil)
-            if !playerNode.isPlaying {
-                playerNode.play()
+            receiverPlayerNode.scheduleBuffer(buffer, completionHandler: nil)
+            if !receiverPlayerNode.isPlaying {
+                receiverPlayerNode.play()
             }
         }
     }
@@ -317,7 +308,7 @@ extension P2PAudioManager: MCSessionDelegate {
                 }
                 if self?.peers.isEmpty == true {
                     self?.connectionStatus = .disconnected
-                    self?.stopAudioEngineForReceiving()
+                    self?.stopReceiverEngine()
                 }
             case .connecting:
                 self?.connectionStatus = .connecting
@@ -326,9 +317,7 @@ extension P2PAudioManager: MCSessionDelegate {
                     self?.peers.append(peerID)
                 }
                 self?.connectionStatus = .connected
-                self?.engineQueue.async {
-                    self?.setupAudioEngineForReceiving()
-                }
+                self?.startReceiverEngine()
             @unknown default:
                 break
             }
