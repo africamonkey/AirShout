@@ -312,6 +312,12 @@ final class P2PAudioManager: NSObject, ObservableObject {
         }
     }
 
+    func restartBrowsing() {
+        browser?.stopBrowsingForPeers()
+        invitedPeers.removeAll()
+        browser?.startBrowsingForPeers()
+    }
+
     private func playAudioData(_ data: Data) {
         engineQueue.async { [weak self] in
             guard let self = self, let audioEngine = self.audioEngine else { return }

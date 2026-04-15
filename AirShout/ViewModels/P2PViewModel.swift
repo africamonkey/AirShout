@@ -66,4 +66,11 @@ final class P2PViewModel: ObservableObject {
     func stopSpeaking() {
         audioManager.stopSpeaking()
     }
+
+    func refreshDevices() {
+        if isSpeaking {
+            stopSpeaking()
+        }
+        audioManager.restartBrowsing()
+    }
 }

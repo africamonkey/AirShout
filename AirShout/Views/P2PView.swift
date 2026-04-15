@@ -9,6 +9,12 @@ struct P2PView: View {
                 Text("在线设备")
                     .font(.headline)
                 Spacer()
+                Button {
+                    viewModel.refreshDevices()
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                        .foregroundColor(.blue)
+                }
             }
 
             deviceList
