@@ -314,8 +314,12 @@ final class P2PAudioManager: NSObject, ObservableObject {
 
     func restartBrowsing() {
         browser?.stopBrowsingForPeers()
+        advertiser?.stopAdvertisingPeer()
+        session?.disconnect()
         invitedPeers.removeAll()
-        browser?.startBrowsingForPeers()
+        peers.removeAll()
+
+        setupMultipeer()
     }
 
     private func playAudioData(_ data: Data) {
