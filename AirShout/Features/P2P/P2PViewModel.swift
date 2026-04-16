@@ -1,12 +1,11 @@
 import Foundation
 import Combine
-import MultipeerConnectivity
 
 final class P2PViewModel: ObservableObject {
     @Published var audioLevel: Float = 0
     @Published var isShouting: Bool = false
-    @Published var connectionStatus: ConnectionStatus = .disconnected
-    @Published var devices: [P2PDevice] = []
+    @Published var connectionState: P2PAudioManager.P2PConnectionState = .disconnected
+    @Published var devices: [PeerInfo] = []
     @Published var showPermissionAlert: Bool = false
     
     private let audioManager: P2PAudioManager
@@ -26,41 +25,24 @@ final class P2PViewModel: ObservableObject {
             .receive(on: DispatchQueue.main)
             .assign(to: &$isShouting)
         
-        audioManager.$connectionStatus
+        audioManager.$connectionState
             .receive(on: DispatchQueue.main)
-            .assign(to: &$connectionStatus)
+            .assign(to: &$connectionState)
         
-        audioManager.$peers
+        audioManager.$discoveredPeers
             .receive(on: DispatchQueue.main)
-            .map { peers in
-                peers.map { peerID in
-                    P2PDevice(
-                        id: peerID,
-                        displayName: peerID.displayName,
-                        isConnected: true
-                    )
-                }
-            }
             .assign(to: &$devices)
     }
     
     func startShout() {
-        Task { @MainActor in
-            do {
-                try await audioManager.start()
-            } catch AudioError.microphonePermissionDenied {
-                showPermissionAlert = true
-            } catch {
-                print("Failed to start audio: \(error)")
-            }
-        }
+        audioManager.startSpeaking()
     }
     
     func stopShout() {
-        audioManager.stop()
+        audioManager.stopSpeaking()
     }
     
     func restartDiscovery() {
-        audioManager.restartBrowsing()
+        audioManager.startDiscovery()
     }
 }
