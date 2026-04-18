@@ -224,6 +224,7 @@ final class NetworkManager: NSObject, AudioManaging {
         stopPlaybackTimer()
 
         DispatchQueue.main.async { [weak self] in
+            self?.isRunning = false
             self?.connectionStatus = .disconnected
             self?.audioLevel = 0
         }
