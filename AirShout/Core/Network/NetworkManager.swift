@@ -106,12 +106,13 @@ final class NetworkManager: NSObject, AudioManaging {
     func stopListening() {
         listener?.cancel()
         listener = nil
-        serverConnections.forEach { $0.cancel() }
-        serverConnections.removeAll()
 
         connectionsQueue.async { [weak self] in
-            self?.activeConnection = nil
-            self?.isServerMode = false
+            guard let self = self else { return }
+            self.serverConnections.forEach { $0.cancel() }
+            self.serverConnections.removeAll()
+            self.activeConnection = nil
+            self.isServerMode = false
         }
     }
 
@@ -269,6 +270,7 @@ final class NetworkManager: NSObject, AudioManaging {
             DispatchQueue.main.async {
                 self?.isRunning = false
                 self?.audioLevel = 0
+                self?.connectionStatus = .disconnected
             }
         }
     }
