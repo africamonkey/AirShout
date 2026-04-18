@@ -38,26 +38,20 @@ struct PacketHeader {
     static func parse(from data: Data) -> (PacketHeader?, Int)? {
         guard data.count >= 10 else { return nil }
 
-        var result: (PacketHeader?, Int)?
-        data.withUnsafeBytes { buffer in
-            guard let baseAddress = buffer.baseAddress else { return }
+        let magic = UInt16(data[0]) << 8 | UInt16(data[1])
+        guard magic == PacketHeader.magic else { return nil }
 
-            let magic = baseAddress.load(as: UInt16.self).bigEndian
-            guard magic == PacketHeader.magic else { return }
+        let version = data[2]
+        guard version == PacketHeader.version else { return nil }
 
-            let version = baseAddress.load(fromByteOffset: 2, as: UInt8.self)
-            guard version == PacketHeader.version else { return }
+        let typeRaw = data[3]
+        guard let type = PacketType(rawValue: typeRaw) else { return nil }
 
-            let typeRaw = baseAddress.load(fromByteOffset: 3, as: UInt8.self)
-            guard let type = PacketType(rawValue: typeRaw) else { return }
+        let timestamp = UInt32(data[4]) << 24 | UInt32(data[5]) << 16 | UInt32(data[6]) << 8 | UInt32(data[7])
+        let payloadLength = UInt16(data[8]) << 8 | UInt16(data[9])
 
-            let timestamp = baseAddress.load(fromByteOffset: 4, as: UInt32.self).bigEndian
-            let payloadLength = baseAddress.load(fromByteOffset: 8, as: UInt16.self).bigEndian
-
-            let header = PacketHeader(type: type, timestamp: timestamp, payloadLength: payloadLength)
-            result = (header, headerSize)
-        }
-        return result
+        let header = PacketHeader(type: type, timestamp: timestamp, payloadLength: payloadLength)
+        return (header, headerSize)
     }
 }
 
@@ -135,18 +129,13 @@ class PacketProcessor {
     private func findNextMagic(in data: Data) -> Int? {
         guard data.count >= 2 else { return nil }
 
-        var result: Int?
-        data.withUnsafeBytes { buffer in
-            guard let baseAddress = buffer.baseAddress else { return }
-            for i in 0..<(data.count - 1) {
-                let magic = baseAddress.load(fromByteOffset: i, as: UInt16.self).bigEndian
-                if magic == PacketHeader.magic {
-                    result = i
-                    return
-                }
+        for i in 0..<(data.count - 1) {
+            let magic = UInt16(data[i]) << 8 | UInt16(data[i + 1])
+            if magic == PacketHeader.magic {
+                return i
             }
         }
-        return result
+        return nil
     }
 
     func reset() {
