@@ -35,6 +35,8 @@ final class NetworkManager: NSObject, AudioManaging {
     private var serverConnections: [NWConnection] = []
     private var localPort: UInt16 = 8080
 
+    private var isServerMode: Bool = false
+
     private var senderEngine: AVAudioEngine?
     private var receiverEngine: AVAudioEngine?
     private var receiverPlayerNode: AVAudioPlayerNode?
@@ -48,12 +50,14 @@ final class NetworkManager: NSObject, AudioManaging {
     private var sendBufferFormat: AVAudioFormat?
     private var accumulatedFrames: AVAudioFrameCount = 0
     private let targetSendDurationMs: Double = 50
+    private var remoteSampleRate: Double = 44100
 
     private let networkQueue = DispatchQueue(label: "com.airshout.network")
     private let audioSession = AVAudioSession.sharedInstance()
 
     private var playbackTimer: Timer?
-    private var isReceiving: Bool = false
+    private let connectionsQueue = DispatchQueue(label: "com.airshout.network.connections")
+    private var activeConnection: NWConnection?
 
     private override init() {
         super.init()
@@ -61,6 +65,7 @@ final class NetworkManager: NSObject, AudioManaging {
 
     func startListening(port: UInt16) throws {
         localPort = port
+        isServerMode = true
 
         listener?.cancel()
         listener = nil
@@ -71,7 +76,7 @@ final class NetworkManager: NSObject, AudioManaging {
         do {
             listener = try NWListener(using: params, on: NWEndpoint.Port(rawValue: port)!)
         } catch {
-            throw NetworkError.portInUse
+            throw NetworkError.connectionFailed(error.localizedDescription)
         }
 
         listener?.stateUpdateHandler = { [weak self] state in
@@ -105,7 +110,12 @@ final class NetworkManager: NSObject, AudioManaging {
     }
 
     private func handleIncomingConnection(_ conn: NWConnection) {
-        serverConnections.append(conn)
+        connectionsQueue.async { [weak self] in
+            guard let self = self else { return }
+            self.serverConnections.append(conn)
+            self.activeConnection = conn
+        }
+
         conn.stateUpdateHandler = { [weak self] state in
             switch state {
             case .ready:
@@ -116,11 +126,18 @@ final class NetworkManager: NSObject, AudioManaging {
                 self?.receiveData(from: conn)
             case .failed(let error):
                 print("Server connection failed: \(error)")
+                self?.connectionsQueue.async {
+                    self?.serverConnections.removeAll { $0 === conn }
+                    self?.activeConnection = self?.serverConnections.first
+                }
                 DispatchQueue.main.async {
                     self?.connectionStatus = .error("连接失败: \(error.localizedDescription)")
                 }
             case .cancelled:
-                self?.serverConnections.removeAll { $0 === conn }
+                self?.connectionsQueue.async {
+                    self?.serverConnections.removeAll { $0 === conn }
+                    self?.activeConnection = self?.serverConnections.first
+                }
                 if self?.serverConnections.isEmpty == true {
                     DispatchQueue.main.async {
                         if self?.isRunning == false {
@@ -137,6 +154,7 @@ final class NetworkManager: NSObject, AudioManaging {
 
     func connect(ip: String, port: UInt16) {
         connectionStatus = .connecting
+        isServerMode = false
 
         clientConnection?.cancel()
         clientConnection = nil
@@ -148,17 +166,26 @@ final class NetworkManager: NSObject, AudioManaging {
             switch state {
             case .ready:
                 print("Client connected to \(ip):\(port)")
+                self?.connectionsQueue.async {
+                    self?.activeConnection = self?.clientConnection
+                }
                 DispatchQueue.main.async {
                     self?.connectionStatus = .connected
                 }
                 self?.receiveData(from: self?.clientConnection)
             case .failed(let error):
                 print("Client connection failed: \(error)")
+                self?.connectionsQueue.async {
+                    self?.activeConnection = nil
+                }
                 DispatchQueue.main.async {
                     self?.connectionStatus = .error("连接失败: \(error.localizedDescription)")
                 }
             case .cancelled:
                 print("Client connection cancelled")
+                self?.connectionsQueue.async {
+                    self?.activeConnection = nil
+                }
                 DispatchQueue.main.async {
                     if self?.isRunning == false {
                         self?.connectionStatus = .disconnected
@@ -177,6 +204,10 @@ final class NetworkManager: NSObject, AudioManaging {
         clientConnection = nil
         serverConnections.forEach { $0.cancel() }
         serverConnections.removeAll()
+
+        connectionsQueue.async { [weak self] in
+            self?.activeConnection = nil
+        }
 
         stopAudioEngines()
         stopPlaybackTimer()
@@ -251,6 +282,7 @@ final class NetworkManager: NSObject, AudioManaging {
         }
 
         sendBufferFormat = inputFormat
+        remoteSampleRate = inputFormat.sampleRate
         accumulatedFrames = 0
 
         let targetFrames = AVAudioFrameCount(inputFormat.sampleRate * targetSendDurationMs / 1000.0)
@@ -273,7 +305,7 @@ final class NetworkManager: NSObject, AudioManaging {
     }
 
     private func handleAudioBuffer(_ buffer: AVAudioPCMBuffer) {
-        guard let sendBuffer = sendBuffer, let format = sendBufferFormat else { return }
+        guard let sendBuffer = sendBuffer, let _ = sendBufferFormat else { return }
         guard let inputChannelData = buffer.floatChannelData else { return }
         guard let outputChannelData = sendBuffer.floatChannelData else { return }
 
@@ -297,7 +329,13 @@ final class NetworkManager: NSObject, AudioManaging {
 
     private func flushSendBuffer() {
         guard accumulatedFrames > 0, let sendBuffer = sendBuffer else { return }
-        guard let connection = clientConnection ?? serverConnections.first else { return }
+
+        var connectionToSend: NWConnection?
+        connectionsQueue.sync {
+            connectionToSend = self.activeConnection
+        }
+
+        guard let connection = connectionToSend else { return }
 
         sendBuffer.frameLength = accumulatedFrames
 
@@ -404,9 +442,10 @@ final class NetworkManager: NSObject, AudioManaging {
 
         receiverEngine.attach(receiverPlayerNode)
 
+        let pcmFormat = AVAudioFormat(standardFormatWithSampleRate: remoteSampleRate, channels: 1)!
         let outputFormat = outputNode.inputFormat(forBus: 0)
 
-        receiverEngine.connect(receiverPlayerNode, to: mainMixer, format: outputFormat)
+        receiverEngine.connect(receiverPlayerNode, to: mainMixer, format: pcmFormat)
         receiverEngine.connect(mainMixer, to: outputNode, format: outputFormat)
 
         receiverEngine.prepare()
@@ -426,14 +465,14 @@ final class NetworkManager: NSObject, AudioManaging {
 
             self.setupReceiverEngineIfNeeded()
 
-            guard let receiverEngine = self.receiverEngine,
+            guard self.receiverEngine != nil,
                   let receiverPlayerNode = self.receiverPlayerNode else { return }
 
             let frameCount = AVAudioFrameCount(data.count / MemoryLayout<Float>.size)
             guard frameCount > 0 else { return }
 
-            let format = receiverEngine.mainMixerNode.outputFormat(forBus: 0)
-            guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else { return }
+            let pcmFormat = AVAudioFormat(standardFormatWithSampleRate: self.remoteSampleRate, channels: 1)!
+            guard let buffer = AVAudioPCMBuffer(pcmFormat: pcmFormat, frameCapacity: frameCount) else { return }
 
             buffer.frameLength = frameCount
 
@@ -461,6 +500,7 @@ final class NetworkManager: NSObject, AudioManaging {
 
             self?.jitterBuffer.clear()
             self?.packetProcessor.reset()
+            self?.remoteSampleRate = 44100
         }
     }
 }
