@@ -107,6 +107,11 @@ final class NetworkManager: NSObject, AudioManaging {
         listener = nil
         serverConnections.forEach { $0.cancel() }
         serverConnections.removeAll()
+
+        connectionsQueue.async { [weak self] in
+            self?.activeConnection = nil
+            self?.isServerMode = false
+        }
     }
 
     private func handleIncomingConnection(_ conn: NWConnection) {
@@ -134,14 +139,16 @@ final class NetworkManager: NSObject, AudioManaging {
                     self?.connectionStatus = .error("连接失败: \(error.localizedDescription)")
                 }
             case .cancelled:
-                self?.connectionsQueue.async {
-                    self?.serverConnections.removeAll { $0 === conn }
-                    self?.activeConnection = self?.serverConnections.first
-                }
-                if self?.serverConnections.isEmpty == true {
-                    DispatchQueue.main.async {
-                        if self?.isRunning == false {
-                            self?.connectionStatus = .disconnected
+                self?.connectionsQueue.async { [weak self] in
+                    guard let self = self else { return }
+                    self.serverConnections.removeAll { $0 === conn }
+                    self.activeConnection = self.serverConnections.first
+
+                    if self.serverConnections.isEmpty {
+                        DispatchQueue.main.async {
+                            if self.isRunning == false {
+                                self.connectionStatus = .disconnected
+                            }
                         }
                     }
                 }
@@ -254,10 +261,15 @@ final class NetworkManager: NSObject, AudioManaging {
             self?.stopSenderEngine()
             self?.stopPlaybackTimer()
 
+            var hasConnections = false
+            self?.connectionsQueue.sync {
+                hasConnections = self?.clientConnection != nil || !(self?.serverConnections.isEmpty ?? true)
+            }
+
             DispatchQueue.main.async {
                 self?.isRunning = false
                 self?.audioLevel = 0
-                if self?.clientConnection == nil && self?.serverConnections.isEmpty == true {
+                if !hasConnections {
                     self?.connectionStatus = .disconnected
                 }
             }
@@ -320,10 +332,9 @@ final class NetworkManager: NSObject, AudioManaging {
                Int(framesToCopy) * MemoryLayout<Float>.size)
         accumulatedFrames += framesToCopy
 
-        processAudioLevel(buffer)
-
         if accumulatedFrames >= sendBuffer.frameCapacity {
             flushSendBuffer()
+            processAudioLevel(buffer)
         }
     }
 
