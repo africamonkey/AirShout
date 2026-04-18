@@ -38,17 +38,20 @@ struct PacketHeader {
     static func parse(from data: Data) -> (PacketHeader?, Int)? {
         guard data.count >= 10 else { return nil }
 
-        let magic = UInt16(data[0]) << 8 | UInt16(data[1])
+        var bytes = [UInt8](repeating: 0, count: 10)
+        (data as NSData).getBytes(&bytes, length: 10)
+
+        let magic = UInt16(bytes[0]) << 8 | UInt16(bytes[1])
         guard magic == PacketHeader.magic else { return nil }
 
-        let version = data[2]
+        let version = bytes[2]
         guard version == PacketHeader.version else { return nil }
 
-        let typeRaw = data[3]
+        let typeRaw = bytes[3]
         guard let type = PacketType(rawValue: typeRaw) else { return nil }
 
-        let timestamp = UInt32(data[4]) << 24 | UInt32(data[5]) << 16 | UInt32(data[6]) << 8 | UInt32(data[7])
-        let payloadLength = UInt16(data[8]) << 8 | UInt16(data[9])
+        let timestamp = UInt32(bytes[4]) << 24 | UInt32(bytes[5]) << 16 | UInt32(bytes[6]) << 8 | UInt32(bytes[7])
+        let payloadLength = UInt16(bytes[8]) << 8 | UInt16(bytes[9])
 
         let header = PacketHeader(type: type, timestamp: timestamp, payloadLength: payloadLength)
         return (header, headerSize)
@@ -129,8 +132,11 @@ class PacketProcessor {
     private func findNextMagic(in data: Data) -> Int? {
         guard data.count >= 2 else { return nil }
 
-        for i in 0..<(data.count - 1) {
-            let magic = UInt16(data[i]) << 8 | UInt16(data[i + 1])
+        var bytes = [UInt8](repeating: 0, count: data.count)
+        (data as NSData).getBytes(&bytes, length: data.count)
+
+        for i in 0..<(bytes.count - 1) {
+            let magic = UInt16(bytes[i]) << 8 | UInt16(bytes[i + 1])
             if magic == PacketHeader.magic {
                 return i
             }
