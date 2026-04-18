@@ -15,13 +15,13 @@ class JitterBuffer {
         packets.insert(packet, at: insertIndex)
     }
 
-    func popIfReady(currentTimeMs: UInt32) -> AudioPacket? {
+    func popIfReady(currentTimeMs: UInt64) -> AudioPacket? {
         lock.lock()
         defer { lock.unlock() }
 
         guard let oldest = packets.first else { return nil }
 
-        let playbackTime = oldest.timestamp + UInt32(targetDelayMs)
+        let playbackTime = oldest.timestamp + UInt64(targetDelayMs)
 
         if currentTimeMs >= playbackTime {
             packets.removeFirst()

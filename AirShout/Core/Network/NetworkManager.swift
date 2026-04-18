@@ -80,13 +80,14 @@ final class NetworkManager: NSObject, AudioManaging {
         }
 
         listener?.stateUpdateHandler = { [weak self] state in
+            guard let self = self else { return }
             switch state {
             case .ready:
                 print("TCP Listener ready on port \(port)")
             case .failed(let error):
                 print("TCP Listener failed: \(error)")
                 DispatchQueue.main.async {
-                    self?.connectionStatus = .error("监听失败: \(error.localizedDescription)")
+                    self.connectionStatus = .error("监听失败: \(error.localizedDescription)")
                 }
             case .cancelled:
                 print("TCP Listener cancelled")
@@ -122,24 +123,25 @@ final class NetworkManager: NSObject, AudioManaging {
         }
 
         conn.stateUpdateHandler = { [weak self] state in
+            guard let self = self else { return }
             switch state {
             case .ready:
                 print("Server connection ready")
                 DispatchQueue.main.async {
-                    self?.connectionStatus = .connected
+                    self.connectionStatus = .connected
                 }
-                self?.receiveData(from: conn)
+                self.receiveData(from: conn)
             case .failed(let error):
                 print("Server connection failed: \(error)")
-                self?.connectionsQueue.async {
-                    self?.serverConnections.removeAll { $0 === conn }
-                    self?.activeConnection = self?.serverConnections.first
+                self.connectionsQueue.async {
+                    self.serverConnections.removeAll { $0 === conn }
+                    self.activeConnection = self.serverConnections.first
                 }
                 DispatchQueue.main.async {
-                    self?.connectionStatus = .error("连接失败: \(error.localizedDescription)")
+                    self.connectionStatus = .error("连接失败: \(error.localizedDescription)")
                 }
             case .cancelled:
-                self?.connectionsQueue.async { [weak self] in
+                self.connectionsQueue.async { [weak self] in
                     guard let self = self else { return }
                     self.serverConnections.removeAll { $0 === conn }
                     self.activeConnection = self.serverConnections.first
@@ -170,32 +172,33 @@ final class NetworkManager: NSObject, AudioManaging {
         clientConnection = NWConnection(to: endpoint, using: .tcp)
 
         clientConnection?.stateUpdateHandler = { [weak self] state in
+            guard let self = self else { return }
             switch state {
             case .ready:
                 print("Client connected to \(ip):\(port)")
-                self?.connectionsQueue.async {
-                    self?.activeConnection = self?.clientConnection
+                self.connectionsQueue.async {
+                    self.activeConnection = self.clientConnection
                 }
                 DispatchQueue.main.async {
-                    self?.connectionStatus = .connected
+                    self.connectionStatus = .connected
                 }
-                self?.receiveData(from: self?.clientConnection)
+                self.receiveData(from: self.clientConnection)
             case .failed(let error):
                 print("Client connection failed: \(error)")
-                self?.connectionsQueue.async {
-                    self?.activeConnection = nil
+                self.connectionsQueue.async {
+                    self.activeConnection = nil
                 }
                 DispatchQueue.main.async {
-                    self?.connectionStatus = .error("连接失败: \(error.localizedDescription)")
+                    self.connectionStatus = .error("连接失败: \(error.localizedDescription)")
                 }
             case .cancelled:
                 print("Client connection cancelled")
-                self?.connectionsQueue.async {
-                    self?.activeConnection = nil
+                self.connectionsQueue.async {
+                    self.activeConnection = nil
                 }
                 DispatchQueue.main.async {
-                    if self?.isRunning == false {
-                        self?.connectionStatus = .disconnected
+                    if self.isRunning == false {
+                        self.connectionStatus = .disconnected
                     }
                 }
             default:
@@ -302,7 +305,9 @@ final class NetworkManager: NSObject, AudioManaging {
         sendBuffer = AVAudioPCMBuffer(pcmFormat: inputFormat, frameCapacity: targetFrames)
 
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { [weak self] buffer, _ in
-            self?.handleAudioBuffer(buffer)
+            self?.audioEngineQueue.async {
+                self?.handleAudioBuffer(buffer)
+            }
         }
 
         senderEngine.prepare()
@@ -435,7 +440,7 @@ final class NetworkManager: NSObject, AudioManaging {
     private func checkPlayback() {
         guard isRunning else { return }
 
-        let currentTimeMs = UInt32(Date().timeIntervalSince1970 * 1000)
+        let currentTimeMs = UInt64(Date().timeIntervalSince1970 * 1000)
 
         if let packet = jitterBuffer.popIfReady(currentTimeMs: currentTimeMs) {
             playAudioData(packet.payload)
@@ -492,9 +497,10 @@ final class NetworkManager: NSObject, AudioManaging {
 
             buffer.frameLength = frameCount
 
+            let byteSize = Int(frameCount) * MemoryLayout<Float>.size
             data.withUnsafeBytes { rawBufferPointer in
                 guard let baseAddress = rawBufferPointer.baseAddress else { return }
-                memcpy(buffer.floatChannelData?[0], baseAddress, data.count)
+                memcpy(buffer.floatChannelData?[0], baseAddress, byteSize)
             }
 
             receiverPlayerNode.scheduleBuffer(buffer, completionHandler: nil)

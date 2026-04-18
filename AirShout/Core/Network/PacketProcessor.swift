@@ -1,8 +1,13 @@
 import Foundation
 
 struct AudioPacket {
-    let timestamp: UInt32
+    let timestamp: UInt64
     let payload: Data
+
+    init(timestamp: UInt32, payload: Data) {
+        self.timestamp = UInt64(timestamp)
+        self.payload = payload
+    }
 }
 
 struct PacketHeader {
