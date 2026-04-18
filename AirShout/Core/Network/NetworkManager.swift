@@ -209,11 +209,12 @@ final class NetworkManager: NSObject, AudioManaging {
     func disconnect() {
         clientConnection?.cancel()
         clientConnection = nil
-        serverConnections.forEach { $0.cancel() }
-        serverConnections.removeAll()
 
         connectionsQueue.async { [weak self] in
-            self?.activeConnection = nil
+            guard let self = self else { return }
+            self.serverConnections.forEach { $0.cancel() }
+            self.serverConnections.removeAll()
+            self.activeConnection = nil
         }
 
         stopAudioEngines()
@@ -397,15 +398,19 @@ final class NetworkManager: NSObject, AudioManaging {
         guard let connection = connection else { return }
 
         connection.receive(minimumIncompleteLength: 1, maximumLength: 65536) { [weak self] data, _, isComplete, error in
+            guard let self = self else { return }
+
             if let data = data {
-                let packets = self?.packetProcessor.processReceivedData(data) ?? []
+                let packets = self.packetProcessor.processReceivedData(data)
                 for packet in packets {
-                    self?.jitterBuffer.insert(packet)
+                    self.jitterBuffer.insert(packet)
                 }
             }
 
             if !isComplete && error == nil {
-                self?.receiveData(from: connection)
+                self.networkQueue.async {
+                    self.receiveData(from: connection)
+                }
             }
         }
     }

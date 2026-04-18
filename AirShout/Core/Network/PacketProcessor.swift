@@ -83,26 +83,25 @@ class PacketProcessor {
         while true {
             switch state {
             case .waitingForHeader:
-                guard let result = PacketHeader.parse(from: recvBuffer) else {
-                    if let syncIndex = findNextMagic(in: recvBuffer) {
+                guard recvBuffer.count >= PacketHeader.headerSize else {
+                    return packets
+                }
+
+                if let result = PacketHeader.parse(from: recvBuffer), let header = result.0 {
+                    currentHeader = header
+                    recvBuffer.removeFirst(result.1)
+                    state = .waitingForPayload(length: header.payloadLength)
+                } else {
+                    if let syncIndex = findNextMagic(in: recvBuffer), syncIndex > 0 {
                         recvBuffer.removeFirst(syncIndex)
+                        continue
+                    }
+                    if let firstByte = recvBuffer.first, firstByte == PacketHeader.magic >> 8 {
+                        recvBuffer.removeFirst(1)
                         continue
                     }
                     return packets
                 }
-
-                let header = result.0
-                let headerEndIndex = result.1
-                guard let unwrappedHeader = header else {
-                    if let syncIndex = findNextMagic(in: recvBuffer) {
-                        recvBuffer.removeFirst(syncIndex)
-                    }
-                    return packets
-                }
-
-                currentHeader = unwrappedHeader
-                recvBuffer.removeFirst(headerEndIndex)
-                state = .waitingForPayload(length: unwrappedHeader.payloadLength)
 
             case .waitingForPayload(let length):
                 guard recvBuffer.count >= Int(length) else {
@@ -125,7 +124,7 @@ class PacketProcessor {
     private func findNextMagic(in data: Data) -> Int? {
         guard data.count >= 2 else { return nil }
 
-        for i in 0..<(data.count - 1) {
+        for i in 1..<(data.count - 1) {
             let magic = data.subdata(in: i..<(i + 2)).withUnsafeBytes {
                 $0.load(as: UInt16.self).bigEndian
             }
