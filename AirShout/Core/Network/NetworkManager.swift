@@ -273,7 +273,9 @@ final class NetworkManager: NSObject, AudioManaging {
             DispatchQueue.main.async {
                 self?.isRunning = false
                 self?.audioLevel = 0
-                if !hasConnections {
+                if hasConnections {
+                    self?.connectionStatus = .connected
+                } else {
                     self?.connectionStatus = .disconnected
                 }
             }
