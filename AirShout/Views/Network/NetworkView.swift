@@ -36,9 +36,6 @@ struct NetworkView: View {
                             if viewModel.isTransmitting {
                                 viewModel.stopTransmission()
                             } else {
-                                if viewModel.selectedConnection != nil {
-                                    viewModel.connect()
-                                }
                                 viewModel.startTransmission()
                             }
                         }) {

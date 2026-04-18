@@ -17,6 +17,7 @@ final class NetworkViewModel: ObservableObject {
     private let networkManager = NetworkManager.shared
     private let storage = SavedConnectionStorage.shared
     private var cancellables = Set<AnyCancellable>()
+    private var pendingStartTransmission: Bool = false
 
     init() {
         setupBindings()
@@ -36,9 +37,15 @@ final class NetworkViewModel: ObservableObject {
         networkManager.$connectionStatus
             .receive(on: DispatchQueue.main)
             .sink { [weak self] status in
-                self?.connectionStatus = status
-                if case .error(let message) = status {
-                    self?.errorMessage = message
+                guard let self = self else { return }
+                self.connectionStatus = status
+
+                if case .connected = status, self.pendingStartTransmission {
+                    self.pendingStartTransmission = false
+                    self.performStartTransmission()
+                } else if case .error(let message) = status {
+                    self.errorMessage = message
+                    self.pendingStartTransmission = false
                 }
             }
             .store(in: &cancellables)
@@ -140,11 +147,24 @@ final class NetworkViewModel: ObservableObject {
     }
 
     func startTransmission() {
-        guard case .connected = connectionStatus else {
-            errorMessage = "请先建立连接"
-            return
+        switch connectionStatus {
+        case .disconnected, .error:
+            if selectedConnection != nil {
+                pendingStartTransmission = true
+                connect()
+            } else {
+                errorMessage = "请先选择一个连接"
+            }
+        case .connecting:
+            pendingStartTransmission = true
+        case .connected:
+            performStartTransmission()
+        case .transmitting:
+            break
         }
+    }
 
+    private func performStartTransmission() {
         Task { @MainActor in
             do {
                 try await networkManager.start()
