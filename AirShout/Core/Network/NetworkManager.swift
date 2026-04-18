@@ -383,7 +383,8 @@ final class NetworkManager: NSObject, AudioManaging {
         let dataSize = frameLength * MemoryLayout<Float>.size
         let pcmData = Data(bytes: channelData[0], count: dataSize)
 
-        let timestamp = UInt32(Date().timeIntervalSince1970 * 1000)
+        let uptimeMs = UInt64(DispatchTime.now().uptimeNanoseconds / 1_000_000)
+        let timestamp = UInt32(truncatingIfNeeded: uptimeMs)
         let header = PacketHeader(type: .audio, timestamp: timestamp, payloadLength: UInt16(pcmData.count))
 
         var packet = header.toData()
@@ -440,7 +441,7 @@ final class NetworkManager: NSObject, AudioManaging {
     private func checkPlayback() {
         guard isRunning else { return }
 
-        let currentTimeMs = UInt64(Date().timeIntervalSince1970 * 1000)
+        let currentTimeMs = UInt64(DispatchTime.now().uptimeNanoseconds / 1_000_000)
 
         if let packet = jitterBuffer.popIfReady(currentTimeMs: currentTimeMs) {
             playAudioData(packet.payload)
