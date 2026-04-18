@@ -40,12 +40,19 @@ final class NetworkViewModel: ObservableObject {
                 guard let self = self else { return }
                 self.connectionStatus = status
 
-                if case .connected = status, self.pendingStartTransmission {
-                    self.pendingStartTransmission = false
-                    self.performStartTransmission()
-                } else if case .error(let message) = status {
+                switch status {
+                case .connected:
+                    if self.pendingStartTransmission {
+                        self.pendingStartTransmission = false
+                        self.performStartTransmission()
+                    }
+                case .error(let message):
                     self.errorMessage = message
                     self.pendingStartTransmission = false
+                case .disconnected:
+                    self.pendingStartTransmission = false
+                default:
+                    break
                 }
             }
             .store(in: &cancellables)
