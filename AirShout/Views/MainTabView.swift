@@ -12,6 +12,11 @@ struct MainTabView: View {
                 .tabItem {
                     Label("AirShout", systemImage: "wave.3.right")
                 }
+
+            NetworkView()
+                .tabItem {
+                    Label("网络", systemImage: "network")
+                }
         }
     }
 }
