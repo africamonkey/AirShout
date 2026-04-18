@@ -175,6 +175,6 @@ final class NetworkViewModel: ObservableObject {
     }
 
     func stopTransmission() {
-        networkManager.stop()
+        networkManager.disconnect()
     }
 }

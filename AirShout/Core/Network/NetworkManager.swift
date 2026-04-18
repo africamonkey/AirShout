@@ -265,19 +265,9 @@ final class NetworkManager: NSObject, AudioManaging {
             self?.stopSenderEngine()
             self?.stopPlaybackTimer()
 
-            var hasConnections = false
-            self?.connectionsQueue.sync {
-                hasConnections = self?.clientConnection != nil || !(self?.serverConnections.isEmpty ?? true)
-            }
-
             DispatchQueue.main.async {
                 self?.isRunning = false
                 self?.audioLevel = 0
-                if hasConnections {
-                    self?.connectionStatus = .connected
-                } else {
-                    self?.connectionStatus = .disconnected
-                }
             }
         }
     }
