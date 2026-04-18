@@ -13,7 +13,7 @@ struct AudioPacket {
 struct PacketHeader {
     static let magic: UInt16 = 0x4148
     static let version: UInt8 = 0x01
-    static let headerSize = 7
+    static let headerSize = 10
 
     var type: PacketType
     var timestamp: UInt32
@@ -36,7 +36,7 @@ struct PacketHeader {
     }
 
     static func parse(from data: Data) -> (PacketHeader?, Int)? {
-        guard data.count >= headerSize else { return nil }
+        guard data.count >= 10 else { return nil }
 
         var result: (PacketHeader?, Int)?
         data.withUnsafeBytes { buffer in
@@ -138,7 +138,7 @@ class PacketProcessor {
         var result: Int?
         data.withUnsafeBytes { buffer in
             guard let baseAddress = buffer.baseAddress else { return }
-            for i in 1..<(data.count - 1) {
+            for i in 0..<(data.count - 1) {
                 let magic = baseAddress.load(fromByteOffset: i, as: UInt16.self).bigEndian
                 if magic == PacketHeader.magic {
                     result = i
