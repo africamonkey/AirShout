@@ -29,6 +29,10 @@ AirShout 是一款 iOS 应用，实现实时隔空喊话功能：用户按住说
 | `ShoutButton.swift` | 按住说话按钮（含 Haptic 反馈） |
 | `WaveformView.swift` | 音量波形显示 |
 | `DeviceListView.swift` | 设备选择列表 |
+| `NetworkManager.swift` | TCP Server/Client，音频收发 |
+| `PacketProcessor.swift` | TCP 粘包/拆包处理，协议解析 |
+| `JitterBuffer.swift` | 音频包缓冲，抗抖动播放 |
+| `SavedConnection.swift` | TCP 连接数据结构与持久化 |
 
 ### 音频流程
 
@@ -76,6 +80,13 @@ AirShout 是一款 iOS 应用，实现实时隔空喊话功能：用户按住说
 - ✅ 麦克风权限错误提示 UI
 - ✅ 单元测试（AudioManager + DevicePreferences）
 - ✅ 编译通过
+- ✅ Network Tab（TCP 直接连接功能）
+  - TCP Server/Client 架构
+  - 协议头设计（Magic + Version + Type + Timestamp + Length）
+  - PacketProcessor 粘包/拆包处理
+  - JitterBuffer 抗抖动播放
+  - 线程安全（connectionsQueue + audioEngineQueue）
+  - Retain cycle 防护（[weak self]）
 
 ### 待验证
 
@@ -210,6 +221,119 @@ inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { [weak se
 }
 ```
 
+### 时间戳溢出问题
+
+**问题**：`Date().timeIntervalSince1970 * 1000` 转换为 UInt32 时会溢出崩溃。
+
+**崩溃信息**：
+```
+Fatal error: Double value cannot be converted to UInt32 because the result would be greater than UInt32.max
+```
+
+**原因**：
+- `Date().timeIntervalSince1970` 返回从 1970 年到现在的秒数（2026 年约 1.7 × 10⁹）
+- 乘以 1000 转换为毫秒后约 1.7 × 10¹²
+- UInt32.max 约 4.3 × 10⁹
+- Swift 的强制转换会对溢出进行 trap
+
+**解决方案**：使用设备 uptime（相对时间）代替 wall-clock time：
+
+```swift
+// 错误 ❌
+let timestamp = UInt32(Date().timeIntervalSince1970 * 1000)  // 会崩溃！
+
+// 正确 ✅
+let uptimeMs = UInt64(DispatchTime.now().uptimeNanoseconds / 1_000_000)
+let timestamp = UInt32(truncatingIfNeeded: uptimeMs)
+```
+
+**注意**：设备 uptime 在约 49.7 天后溢出 UInt32，生产环境应考虑使用 UInt64 或添加 session ID 处理回绕。
+
+### TCP/Network 线程安全要点
+
+**问题**：TCP 连接和音频处理涉及多线程访问共享状态。
+
+**关键原则**：
+1. 所有对 `serverConnections` 和 `activeConnection` 的修改必须在同一个串行队列（`connectionsQueue`）中执行
+2. 读取 `activeConnection` 时使用 `connectionsQueue.sync`
+3. 写 `activeConnection` 时使用 `connectionsQueue.async`
+4. NWConnection/NWListener 的 state handler 必须使用 `[weak self]` 避免 retain cycle
+5. 音频 tap callback 必须调度到 `audioEngineQueue`，避免与 `stopSenderEngine()` 竞争
+
+**正确模式**：
+```swift
+// 读取共享状态
+var connectionToSend: NWConnection?
+connectionsQueue.sync {
+    connectionToSend = self.activeConnection
+}
+
+// 修改共享状态
+connectionsQueue.async { [weak self] in
+    guard let self = self else { return }
+    self.serverConnections.append(conn)
+    self.activeConnection = conn
+}
+```
+
+### TCP 粘包/拆包处理
+
+**问题**：TCP 是流式协议，不保留消息边界，需要自定义协议和状态机解析。
+
+**协议设计**：使用固定长度 Header + 变长 Payload：
+```
+[Magic: 2 bytes][Version: 1 byte][Type: 1 byte][Timestamp: 4 bytes][Length: 2 bytes][Payload: n bytes]
+```
+
+**状态机解析**：
+```swift
+enum State {
+    case waitingForHeader
+    case waitingForPayload(length: UInt16)
+}
+```
+
+**错误同步**：当 magic 校验失败时，逐字节查找下一个有效 magic 位置重新同步。
+
+### Jitter Buffer 时间基一致性
+
+**问题**：发送端和接收端必须使用相同的时间基计算 timestamp 和 playbackTime。
+
+**关键点**：
+- Sender 和 Receiver 都使用 `DispatchTime.now().uptimeNanoseconds` 作为时间源
+- 发送时记录：packet.timestamp = 发送时刻 uptime
+- 接收时判断：currentTimeMs >= packet.timestamp + targetDelayMs
+- 绝对时间（如 Date）不适合跨设备同步，但适合单设备内相对排序
+
+**错误示例**：
+```swift
+// Sender 使用 uptime，Receiver 使用 Date - 时间基不一致！
+let timestamp = UInt32(DispatchTime.now().uptimeNanoseconds / 1_000_000)
+let currentTimeMs = UInt64(Date().timeIntervalSince1970 * 1000)  // 错误！
+```
+
+### Retain Cycle 防护
+
+**问题**：NWConnection/NWListener 的回调闭包可能捕获 `self`，导致循环引用。
+
+**必须使用 `[weak self]` 的位置**：
+- `listener?.stateUpdateHandler`
+- `listener?.newConnectionHandler`
+- `conn.stateUpdateHandler`
+- `clientConnection?.stateUpdateHandler`
+- `connection.receive(...)` 的 completion handler
+- `connection.send(...)` 的 completion handler
+- `inputNode.installTap(...)` 的 callback
+- `Timer.scheduledTimer(...)` 的 callback
+
+**模式**：
+```swift
+listener?.stateUpdateHandler = { [weak self] state in
+    guard let self = self else { return }
+    // 安全使用 self
+}
+```
+
 ## 开发命令
 
 ```bash
@@ -224,6 +348,11 @@ xcodebuild -scheme AirShout -configuration Debug -destination 'platform=iOS Devi
 
 ```
 xxxxxxx feat: add Phase 1 enhancements - Haptic, permission alert, device memory, background audio, unit tests
+144dd3e fix: use device uptime instead of Date for timestamps
+873daa6 fix: critical retain cycles, race conditions, and memory safety
+965de54 fix: critical thread safety and protocol parsing issues
+ccebef0 fix: NetworkManager additional thread safety and logic issues
+486b5c9 fix: NetworkManager thread safety and audio format issues
 b68e144 engineQueue 非阻塞调用，修复UI冻结问题
 41f73cd change mode to default
 c8bc475 禁止 restartEngine 在主线程运行
