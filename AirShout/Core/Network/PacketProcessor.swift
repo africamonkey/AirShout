@@ -100,6 +100,7 @@ class PacketProcessor {
                     recvBuffer.removeFirst(result.1)
                     state = .waitingForPayload(length: header.payloadLength)
                 } else {
+                    currentHeader = nil
                     if let syncIndex = findNextMagic(in: recvBuffer), syncIndex > 0 {
                         recvBuffer.removeFirst(syncIndex)
                         continue

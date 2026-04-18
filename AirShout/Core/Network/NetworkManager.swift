@@ -341,6 +341,7 @@ final class NetworkManager: NSObject, AudioManaging {
 
     private func flushSendBuffer() {
         guard accumulatedFrames > 0, let sendBuffer = sendBuffer else { return }
+        guard isRunning else { return }
 
         var connectionToSend: NWConnection?
         connectionsQueue.sync {
@@ -494,9 +495,14 @@ final class NetworkManager: NSObject, AudioManaging {
             buffer.frameLength = frameCount
 
             let byteSize = Int(frameCount) * MemoryLayout<Float>.size
-            data.withUnsafeBytes { rawBufferPointer in
-                guard let baseAddress = rawBufferPointer.baseAddress else { return }
-                memcpy(buffer.floatChannelData?[0], baseAddress, byteSize)
+            var alignedBytes = [UInt8](repeating: 0, count: byteSize)
+            for i in 0..<min(byteSize, data.count) {
+                alignedBytes[i] = data[i]
+            }
+            alignedBytes.withUnsafeBufferPointer { bufferPtr in
+                guard let srcAddress = bufferPtr.baseAddress,
+                      let dstAddress = buffer.floatChannelData?[0] else { return }
+                memcpy(dstAddress, srcAddress, byteSize)
             }
 
             receiverPlayerNode.scheduleBuffer(buffer, completionHandler: nil)
