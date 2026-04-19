@@ -49,7 +49,8 @@ struct NetworkView: View {
                             .foregroundColor(.white)
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
-                        .disabled(viewModel.selectedConnection == nil && !viewModel.isTransmitting)
+                        .disabled(!viewModel.isTransmitting && viewModel.selectedConnection == nil)
+                        .disabled(viewModel.connectionStatus == .connecting)
                     }
                     .padding(.horizontal)
                 }

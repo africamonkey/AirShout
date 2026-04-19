@@ -18,6 +18,9 @@ final class NetworkViewModel: ObservableObject {
     private let storage = SavedConnectionStorage.shared
     private var cancellables = Set<AnyCancellable>()
     private var pendingStartTransmission: Bool = false
+    private var connectingTimer: Timer?
+    private let connectingTimeout: TimeInterval = 3.0
+    private var currentConnectingId: Int = 0
 
     init() {
         setupBindings()
@@ -42,6 +45,8 @@ final class NetworkViewModel: ObservableObject {
 
                 switch status {
                 case .connected:
+                    self.connectingTimer?.invalidate()
+                    self.connectingTimer = nil
                     if self.pendingStartTransmission {
                         self.pendingStartTransmission = false
                         self.performStartTransmission()
@@ -49,13 +54,32 @@ final class NetworkViewModel: ObservableObject {
                 case .error(let message):
                     self.errorMessage = message
                     self.pendingStartTransmission = false
+                    self.connectingTimer?.invalidate()
+                    self.connectingTimer = nil
                 case .disconnected:
                     self.pendingStartTransmission = false
+                    self.connectingTimer?.invalidate()
+                    self.connectingTimer = nil
+                case .connecting:
+                    self.startConnectingTimer()
                 default:
                     break
                 }
             }
             .store(in: &cancellables)
+    }
+
+    private func startConnectingTimer() {
+        connectingTimer?.invalidate()
+        let timerConnectingId = currentConnectingId
+        connectingTimer = Timer.scheduledTimer(withTimeInterval: connectingTimeout, repeats: false) { [weak self] _ in
+            guard let self = self else { return }
+            if self.connectionStatus == .connecting && self.currentConnectingId == timerConnectingId {
+                self.connectionStatus = .disconnected
+                self.errorMessage = "连接超时"
+                self.pendingStartTransmission = false
+            }
+        }
     }
 
     private func loadConnections() {
@@ -157,13 +181,17 @@ final class NetworkViewModel: ObservableObject {
         switch connectionStatus {
         case .disconnected, .error:
             if selectedConnection != nil {
+                currentConnectingId += 1
                 pendingStartTransmission = true
                 connect()
             } else {
                 errorMessage = "请先选择一个连接"
             }
         case .connecting:
+            currentConnectingId += 1
             pendingStartTransmission = true
+            networkManager.disconnect()
+            connect()
         case .connected:
             performStartTransmission()
         case .transmitting:
@@ -183,5 +211,9 @@ final class NetworkViewModel: ObservableObject {
 
     func stopTransmission() {
         networkManager.disconnect()
+    }
+
+    deinit {
+        connectingTimer?.invalidate()
     }
 }

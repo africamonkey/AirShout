@@ -40,25 +40,20 @@ final class NetworkManager: NSObject, AudioManaging {
     private var senderEngine: AVAudioEngine?
     private var receiverEngine: AVAudioEngine?
     private var receiverPlayerNode: AVAudioPlayerNode?
-    private let audioEngineQueue = DispatchQueue(label: "com.airshout.network.audioengine")
+    private let receiverQueue = DispatchQueue(label: "com.airshout.network.receiver")
 
-    private let jitterBuffer = JitterBuffer()
     private let packetProcessor = PacketProcessor()
     private let levelProcessor = AudioLevelProcessor()
 
-    private var sendBuffer: AVAudioPCMBuffer?
-    private var sendBufferFormat: AVAudioFormat?
-    private var accumulatedFrames: AVAudioFrameCount = 0
-    private let targetSendDurationMs: Double = 50
     private var remoteSampleRate: Double = 44100
 
     private let networkQueue = DispatchQueue(label: "com.airshout.network")
     private let audioSession = AVAudioSession.sharedInstance()
 
-    private var playbackTimer: Timer?
     private let connectionsQueue = DispatchQueue(label: "com.airshout.network.connections")
     private var activeConnection: NWConnection?
     private var isReceiving: Bool = false
+    private var isDisconnecting: Bool = false
 
     private override init() {
         super.init()
@@ -164,11 +159,13 @@ final class NetworkManager: NSObject, AudioManaging {
     }
 
     func connect(ip: String, port: UInt16) {
-        connectionStatus = .connecting
-        isServerMode = false
+        guard !isDisconnecting else { return }
 
         clientConnection?.cancel()
         clientConnection = nil
+
+        isServerMode = false
+        connectionStatus = .connecting
 
         let endpoint = NWEndpoint.hostPort(host: .init(ip), port: .init(rawValue: port)!)
         clientConnection = NWConnection(to: endpoint, using: .tcp)
@@ -213,6 +210,7 @@ final class NetworkManager: NSObject, AudioManaging {
     }
 
     func disconnect() {
+        isDisconnecting = true
         clientConnection?.cancel()
         clientConnection = nil
 
@@ -230,6 +228,7 @@ final class NetworkManager: NSObject, AudioManaging {
             self?.isRunning = false
             self?.connectionStatus = .disconnected
             self?.audioLevel = 0
+            self?.isDisconnecting = false
         }
     }
 
@@ -246,7 +245,7 @@ final class NetworkManager: NSObject, AudioManaging {
         }
 
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            audioEngineQueue.async {
+            receiverQueue.async {
                 do {
                     try self.setupSenderEngine()
                     continuation.resume()
@@ -265,7 +264,7 @@ final class NetworkManager: NSObject, AudioManaging {
     }
 
     func stop() {
-        audioEngineQueue.async { [weak self] in
+        receiverQueue.async { [weak self] in
             self?.stopSenderEngine()
 
             DispatchQueue.main.async {
@@ -293,17 +292,14 @@ final class NetworkManager: NSObject, AudioManaging {
             throw AudioError.engineSetupFailed
         }
 
-        sendBufferFormat = inputFormat
         remoteSampleRate = inputFormat.sampleRate
-        accumulatedFrames = 0
-
-        let targetFrames = AVAudioFrameCount(inputFormat.sampleRate * targetSendDurationMs / 1000.0)
-        sendBuffer = AVAudioPCMBuffer(pcmFormat: inputFormat, frameCapacity: targetFrames)
+        let levelProcessor = self.levelProcessor
 
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { [weak self] buffer, _ in
-            self?.audioEngineQueue.async {
-                self?.handleAudioBuffer(buffer)
-            }
+            guard let self = self else { return }
+
+            self.processAudioLevel(buffer, processor: levelProcessor)
+            self.sendAudioBuffer(buffer)
         }
 
         senderEngine.prepare()
@@ -314,34 +310,9 @@ final class NetworkManager: NSObject, AudioManaging {
         senderEngine?.inputNode.removeTap(onBus: 0)
         senderEngine?.stop()
         senderEngine = nil
-        sendBuffer = nil
-        accumulatedFrames = 0
     }
 
-    private func handleAudioBuffer(_ buffer: AVAudioPCMBuffer) {
-        guard let sendBuffer = sendBuffer, let _ = sendBufferFormat else { return }
-        guard let inputChannelData = buffer.floatChannelData else { return }
-        guard let outputChannelData = sendBuffer.floatChannelData else { return }
-
-        let framesToCopy = min(buffer.frameLength, sendBuffer.frameCapacity - accumulatedFrames)
-        guard framesToCopy > 0 else {
-            flushSendBuffer()
-            return
-        }
-
-        memcpy(outputChannelData[0].advanced(by: Int(accumulatedFrames)),
-               inputChannelData[0],
-               Int(framesToCopy) * MemoryLayout<Float>.size)
-        accumulatedFrames += framesToCopy
-
-        if accumulatedFrames >= sendBuffer.frameCapacity {
-            flushSendBuffer()
-            processAudioLevel(buffer)
-        }
-    }
-
-    private func flushSendBuffer() {
-        guard accumulatedFrames > 0, let sendBuffer = sendBuffer else { return }
+    private func sendAudioBuffer(_ buffer: AVAudioPCMBuffer) {
         guard isRunning else { return }
 
         var connectionToSend: NWConnection?
@@ -351,19 +322,31 @@ final class NetworkManager: NSObject, AudioManaging {
 
         guard let connection = connectionToSend else { return }
 
-        sendBuffer.frameLength = accumulatedFrames
+        guard let channelData = buffer.floatChannelData else { return }
+        let frameLength = Int(buffer.frameLength)
+        let dataSize = frameLength * MemoryLayout<Float>.size
+        let pcmData = Data(bytes: channelData[0], count: dataSize)
 
-        let packet = createPacket(from: sendBuffer)
-        send(data: packet, to: connection)
+        let uptimeMs = UInt64(DispatchTime.now().uptimeNanoseconds / 1_000_000)
+        let timestamp = UInt32(truncatingIfNeeded: uptimeMs)
+        let sampleRate = UInt32(remoteSampleRate)
+        let header = PacketHeader(type: .audio, timestamp: timestamp, payloadLength: UInt16(pcmData.count), sampleRate: sampleRate)
 
-        accumulatedFrames = 0
+        var packet = header.toData()
+        packet.append(pcmData)
+
+        connection.send(content: packet, completion: .contentProcessed { error in
+            if let error = error {
+                print("Send error: \(error)")
+            }
+        })
     }
 
-    private func processAudioLevel(_ buffer: AVAudioPCMBuffer) {
+    private func processAudioLevel(_ buffer: AVAudioPCMBuffer, processor: AudioLevelProcessor) {
         let now = Date().timeIntervalSinceReferenceDate
-        guard levelProcessor.shouldUpdate(now: now) else { return }
+        guard processor.shouldUpdate(now: now) else { return }
 
-        guard let level = levelProcessor.calculateLevel(from: buffer) else { return }
+        guard let level = processor.calculateLevel(from: buffer) else { return }
 
         DispatchQueue.main.async { [weak self] in
             self?.audioLevel = level
@@ -373,42 +356,31 @@ final class NetworkManager: NSObject, AudioManaging {
         }
     }
 
-    private func createPacket(from buffer: AVAudioPCMBuffer) -> Data {
-        guard let channelData = buffer.floatChannelData else { return Data() }
-
-        let frameLength = Int(buffer.frameLength)
-        let dataSize = frameLength * MemoryLayout<Float>.size
-        let pcmData = Data(bytes: channelData[0], count: dataSize)
-
-        let uptimeMs = UInt64(DispatchTime.now().uptimeNanoseconds / 1_000_000)
-        let timestamp = UInt32(truncatingIfNeeded: uptimeMs)
-        let header = PacketHeader(type: .audio, timestamp: timestamp, payloadLength: UInt16(pcmData.count))
-
-        var packet = header.toData()
-        packet.append(pcmData)
-        return packet
-    }
-
-    private func send(data: Data, to connection: NWConnection) {
-        connection.send(content: data, completion: .contentProcessed { error in
-            if let error = error {
-                print("Send error: \(error)")
-            }
-        })
-    }
-
     private func receiveData(from connection: NWConnection?) {
         guard let connection = connection else { return }
+
+        var isReceivingCopy: Bool = false
+        connectionsQueue.sync {
+            isReceivingCopy = self.isReceiving
+        }
+        guard isReceivingCopy else { return }
 
         connection.receive(minimumIncompleteLength: 1, maximumLength: 65536) { [weak self] data, _, isComplete, error in
             guard let self = self else { return }
 
+            var isReceivingCopy: Bool = false
+            var isDisconnectingCopy: Bool = false
+            self.connectionsQueue.sync {
+                isReceivingCopy = self.isReceiving
+                isDisconnectingCopy = self.isDisconnecting
+            }
+            guard isReceivingCopy, !isDisconnectingCopy else { return }
+
             if let data = data {
                 let packets = self.packetProcessor.processReceivedData(data)
                 for packet in packets {
-                    self.jitterBuffer.insert(packet)
+                    self.playAudioData(packet.payload, sampleRate: packet.sampleRate)
                 }
-                self.schedulePacketsFromBuffer()
             }
 
             if !isComplete && error == nil {
@@ -427,46 +399,63 @@ final class NetworkManager: NSObject, AudioManaging {
         }
     }
 
-    private func schedulePacketsFromBuffer() {
-        guard isReceiving else { return }
+    private func playAudioData(_ data: Data, sampleRate: Double) {
+        var isDisconnectingCopy: Bool = false
+        connectionsQueue.sync {
+            isDisconnectingCopy = self.isDisconnecting
+        }
+        guard !isDisconnectingCopy else { return }
 
-        audioEngineQueue.async { [weak self] in
-            guard let self = self, self.isReceiving else { return }
-
-            self.setupReceiverEngineIfNeeded()
-            guard let receiverPlayerNode = self.receiverPlayerNode else { return }
-
-            while let packet = self.jitterBuffer.popIfReady(currentTimeMs: 0) {
-                let frameCount = AVAudioFrameCount(packet.payload.count / MemoryLayout<Float>.size)
-                guard frameCount > 0 else { continue }
-
-                let pcmFormat = AVAudioFormat(standardFormatWithSampleRate: self.remoteSampleRate, channels: 1)!
-                guard let buffer = AVAudioPCMBuffer(pcmFormat: pcmFormat, frameCapacity: frameCount) else { continue }
-
-                buffer.frameLength = frameCount
-
-                let byteSize = Int(frameCount) * MemoryLayout<Float>.size
-                var alignedBytes = [UInt8](repeating: 0, count: byteSize)
-                for i in 0..<min(byteSize, packet.payload.count) {
-                    alignedBytes[i] = packet.payload[i]
+        if receiverEngine == nil {
+            receiverQueue.sync {
+                if self.receiverEngine == nil {
+                    self.setupReceiverEngine()
                 }
-                alignedBytes.withUnsafeBufferPointer { bufferPtr in
-                    guard let srcAddress = bufferPtr.baseAddress,
-                          let dstAddress = buffer.floatChannelData?[0] else { return }
-                    memcpy(dstAddress, srcAddress, byteSize)
-                }
-
-                receiverPlayerNode.scheduleBuffer(buffer, completionHandler: nil)
-            }
-
-            if !receiverPlayerNode.isPlaying && !self.jitterBuffer.isEmpty {
-                receiverPlayerNode.play()
             }
         }
+
+        guard let playerNode = receiverPlayerNode,
+              let engine = receiverEngine,
+              engine.isRunning else { return }
+
+        scheduleBuffer(data, sampleRate: sampleRate, playerNode: playerNode)
     }
 
-    private func setupReceiverEngineIfNeeded() {
+    private func scheduleBuffer(_ data: Data, sampleRate: Double, playerNode: AVAudioPlayerNode) {
+        var isDisconnectingCopy: Bool = false
+        connectionsQueue.sync {
+            isDisconnectingCopy = self.isDisconnecting
+        }
+        guard !isDisconnectingCopy else { return }
+
+        guard playerNode.isPlaying else { return }
+
+        let frameCount = AVAudioFrameCount(data.count / MemoryLayout<Float>.size)
+        guard frameCount > 0 else { return }
+
+        guard let engine = receiverEngine else { return }
+        let pcmFormat = engine.mainMixerNode.outputFormat(forBus: 0)
+        guard let buffer = AVAudioPCMBuffer(pcmFormat: pcmFormat, frameCapacity: frameCount) else { return }
+
+        buffer.frameLength = frameCount
+
+        data.withUnsafeBytes { rawBufferPointer in
+            guard let baseAddress = rawBufferPointer.baseAddress else { return }
+            memcpy(buffer.floatChannelData?[0], baseAddress, data.count)
+        }
+
+        playerNode.scheduleBuffer(buffer, completionHandler: nil)
+    }
+
+    private func setupReceiverEngine() {
         guard receiverEngine == nil else { return }
+
+        do {
+            try AudioSessionConfig.configure(audioSession)
+        } catch {
+            print("Failed to configure audio session for receiving: \(error)")
+            return
+        }
 
         receiverEngine = AVAudioEngine()
         guard let receiverEngine = receiverEngine else { return }
@@ -476,23 +465,20 @@ final class NetworkManager: NSObject, AudioManaging {
 
         receiverPlayerNode = AVAudioPlayerNode()
         guard let receiverPlayerNode = receiverPlayerNode else { return }
-
         receiverEngine.attach(receiverPlayerNode)
 
-        let pcmFormat = AVAudioFormat(standardFormatWithSampleRate: remoteSampleRate, channels: 1)!
-        let outputFormat = outputNode.inputFormat(forBus: 0)
-
-        receiverEngine.connect(receiverPlayerNode, to: mainMixer, format: pcmFormat)
-        receiverEngine.connect(mainMixer, to: outputNode, format: outputFormat)
+        receiverEngine.connect(receiverPlayerNode, to: mainMixer, format: nil)
+        receiverEngine.connect(mainMixer, to: outputNode, format: nil)
 
         receiverEngine.prepare()
-
         do {
             try receiverEngine.start()
-            receiverPlayerNode.play()
         } catch {
+            print("Failed to start receiver engine: \(error)")
             self.receiverEngine = nil
+            return
         }
+        receiverPlayerNode.play()
     }
 
     private func startReceiving() {
@@ -508,7 +494,7 @@ final class NetworkManager: NSObject, AudioManaging {
     }
 
     private func stopAudioEngines() {
-        audioEngineQueue.async { [weak self] in
+        receiverQueue.sync { [weak self] in
             self?.stopSenderEngine()
 
             self?.receiverPlayerNode?.stop()
@@ -516,7 +502,6 @@ final class NetworkManager: NSObject, AudioManaging {
             self?.receiverEngine = nil
             self?.receiverPlayerNode = nil
 
-            self?.jitterBuffer.clear()
             self?.packetProcessor.reset()
             self?.remoteSampleRate = 44100
             self?.isReceiving = false

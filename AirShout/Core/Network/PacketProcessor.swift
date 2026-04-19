@@ -3,21 +3,24 @@ import Foundation
 struct AudioPacket {
     let timestamp: UInt64
     let payload: Data
+    let sampleRate: Double
 
-    init(timestamp: UInt32, payload: Data) {
+    init(timestamp: UInt32, payload: Data, sampleRate: Double = 44100) {
         self.timestamp = UInt64(timestamp)
         self.payload = payload
+        self.sampleRate = sampleRate
     }
 }
 
 struct PacketHeader {
     static let magic: UInt16 = 0x4148
-    static let version: UInt8 = 0x01
-    static let headerSize = 10
+    static let version: UInt8 = 0x02
+    static let headerSize: Int = 14
 
     var type: PacketType
     var timestamp: UInt32
     var payloadLength: UInt16
+    var sampleRate: UInt32
 
     func toData() -> Data {
         var data = Data()
@@ -26,20 +29,19 @@ struct PacketHeader {
         var typeRaw = type.rawValue
         var timestamp = self.timestamp.bigEndian
         var payloadLength = self.payloadLength.bigEndian
+        var sampleRate = self.sampleRate.bigEndian
 
         data.append(Data(bytes: &magic, count: 2))
         data.append(Data(bytes: &version, count: 1))
         data.append(Data(bytes: &typeRaw, count: 1))
         data.append(Data(bytes: &timestamp, count: 4))
         data.append(Data(bytes: &payloadLength, count: 2))
+        data.append(Data(bytes: &sampleRate, count: 4))
         return data
     }
 
-    static func parse(from data: Data) -> (PacketHeader?, Int)? {
-        guard data.count >= 10 else { return nil }
-
-        var bytes = [UInt8](repeating: 0, count: 10)
-        (data as NSData).getBytes(&bytes, length: 10)
+    static func parse(from bytes: [UInt8]) -> PacketHeader? {
+        guard bytes.count >= headerSize else { return nil }
 
         let magic = UInt16(bytes[0]) << 8 | UInt16(bytes[1])
         guard magic == PacketHeader.magic else { return nil }
@@ -52,9 +54,9 @@ struct PacketHeader {
 
         let timestamp = UInt32(bytes[4]) << 24 | UInt32(bytes[5]) << 16 | UInt32(bytes[6]) << 8 | UInt32(bytes[7])
         let payloadLength = UInt16(bytes[8]) << 8 | UInt16(bytes[9])
+        let sampleRate = UInt32(bytes[10]) << 24 | UInt32(bytes[11]) << 16 | UInt32(bytes[12]) << 8 | UInt32(bytes[13])
 
-        let header = PacketHeader(type: type, timestamp: timestamp, payloadLength: payloadLength)
-        return (header, headerSize)
+        return PacketHeader(type: type, timestamp: timestamp, payloadLength: payloadLength, sampleRate: sampleRate)
     }
 }
 
@@ -63,21 +65,17 @@ enum PacketType: UInt8 {
     case control = 0x02
 }
 
-enum ControlSubtype: UInt8 {
-    case ping = 0x01
-    case pong = 0x02
-    case disconnect = 0x03
-}
-
 class PacketProcessor {
-    enum State {
-        case waitingForHeader
-        case waitingForPayload(length: UInt16)
-    }
+    private var recvBuffer = Data()
+    private var expectedPayloadLength: UInt16 = 0
+    private var currentTimestamp: UInt32 = 0
+    private var currentSampleRate: Double = 44100
 
-    var state: State = .waitingForHeader
-    var recvBuffer = Data()
-    var currentHeader: PacketHeader?
+    enum ParseState {
+        case waitingForHeader
+        case waitingForPayload
+    }
+    private var state: ParseState = .waitingForHeader
 
     private let lock = NSLock()
 
@@ -95,62 +93,41 @@ class PacketProcessor {
                     return packets
                 }
 
-                if let result = PacketHeader.parse(from: recvBuffer), let header = result.0 {
-                    currentHeader = header
-                    recvBuffer.removeFirst(result.1)
-                    state = .waitingForPayload(length: header.payloadLength)
-                } else {
-                    currentHeader = nil
-                    if let syncIndex = findNextMagic(in: recvBuffer), syncIndex > 0 {
-                        recvBuffer.removeFirst(syncIndex)
-                        continue
-                    }
-                    if let firstByte = recvBuffer.first, firstByte == PacketHeader.magic >> 8 {
-                        recvBuffer.removeFirst(1)
-                        continue
-                    }
+                let headerBytes = [UInt8](recvBuffer.prefix(PacketHeader.headerSize))
+                guard let header = PacketHeader.parse(from: headerBytes) else {
+                    recvBuffer.removeFirst(1)
+                    continue
+                }
+
+                currentTimestamp = header.timestamp
+                currentSampleRate = Double(header.sampleRate)
+                expectedPayloadLength = header.payloadLength
+                recvBuffer.removeFirst(PacketHeader.headerSize)
+                state = .waitingForPayload
+
+            case .waitingForPayload:
+                guard recvBuffer.count >= Int(expectedPayloadLength) else {
                     return packets
                 }
 
-            case .waitingForPayload(let length):
-                guard recvBuffer.count >= Int(length) else {
-                    return packets
-                }
+                let payload = recvBuffer.prefix(Int(expectedPayloadLength))
+                recvBuffer.removeFirst(Int(expectedPayloadLength))
 
-                let payload = recvBuffer.prefix(Int(length))
-                recvBuffer.removeFirst(Int(length))
+                let packet = AudioPacket(timestamp: currentTimestamp, payload: Data(payload), sampleRate: currentSampleRate)
+                packets.append(packet)
 
-                if let header = currentHeader {
-                    packets.append(AudioPacket(timestamp: header.timestamp, payload: Data(payload)))
-                }
-
-                currentHeader = nil
                 state = .waitingForHeader
             }
         }
-    }
-
-    private func findNextMagic(in data: Data) -> Int? {
-        guard data.count >= 2 else { return nil }
-
-        var bytes = [UInt8](repeating: 0, count: data.count)
-        (data as NSData).getBytes(&bytes, length: data.count)
-
-        for i in 0..<(bytes.count - 1) {
-            let magic = UInt16(bytes[i]) << 8 | UInt16(bytes[i + 1])
-            if magic == PacketHeader.magic {
-                return i
-            }
-        }
-        return nil
     }
 
     func reset() {
         lock.lock()
         defer { lock.unlock() }
 
-        state = .waitingForHeader
         recvBuffer.removeAll()
-        currentHeader = nil
+        state = .waitingForHeader
+        expectedPayloadLength = 0
+        currentTimestamp = 0
     }
 }
