@@ -23,12 +23,17 @@ class JitterBuffer {
 
         guard let oldest = packets.first else { return nil }
 
-        if packets.count > 1 {
+        if packets.count > 20 {
             packets.removeFirst()
             return oldest
         }
 
-        return oldest
+        let playbackTime = oldest.timestamp + UInt64(targetDelayMs)
+        if currentTimeMs >= playbackTime || packets.count > 5 {
+            packets.removeFirst()
+            return oldest
+        }
+        return nil
     }
 
     func cleanup(maxCount: Int = 100) {
