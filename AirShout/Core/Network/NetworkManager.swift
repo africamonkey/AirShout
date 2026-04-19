@@ -405,8 +405,11 @@ final class NetworkManager: NSObject, AudioManaging {
             guard let self = self else { return }
 
             if let data = data {
+                print("[NetworkManager] Received \(data.count) bytes")
                 let packets = self.packetProcessor.processReceivedData(data)
+                print("[NetworkManager] Parsed \(packets.count) packets")
                 for packet in packets {
+                    print("[NetworkManager] Inserting packet with timestamp \(packet.timestamp), payload size \(packet.payload.count)")
                     self.jitterBuffer.insert(packet)
                 }
             }
@@ -419,10 +422,11 @@ final class NetworkManager: NSObject, AudioManaging {
         }
 
         if receiverEngine == nil {
+            print("[NetworkManager] Configuring audio session for playback")
             do {
                 try AudioSessionConfig.configure(audioSession)
             } catch {
-                print("Failed to configure audio session for playback: \(error)")
+                print("[NetworkManager] Failed to configure audio session: \(error)")
             }
         }
     }
@@ -448,7 +452,10 @@ final class NetworkManager: NSObject, AudioManaging {
         let currentTimeMs = UInt64(DispatchTime.now().uptimeNanoseconds / 1_000_000)
 
         if let packet = jitterBuffer.popIfReady(currentTimeMs: currentTimeMs) {
+            print("[NetworkManager] checkPlayback popping packet with timestamp \(packet.timestamp), payload size \(packet.payload.count)")
             playAudioData(packet.payload)
+        } else {
+            print("[NetworkManager] checkPlayback: no packet ready, buffer count = \(jitterBuffer.count)")
         }
 
         jitterBuffer.cleanup()
@@ -457,6 +464,7 @@ final class NetworkManager: NSObject, AudioManaging {
     private func setupReceiverEngineIfNeeded() {
         guard receiverEngine == nil else { return }
 
+        print("[NetworkManager] Setting up receiver audio engine")
         receiverEngine = AVAudioEngine()
         guard let receiverEngine = receiverEngine else { return }
 
@@ -471,6 +479,9 @@ final class NetworkManager: NSObject, AudioManaging {
         let pcmFormat = AVAudioFormat(standardFormatWithSampleRate: remoteSampleRate, channels: 1)!
         let outputFormat = outputNode.inputFormat(forBus: 0)
 
+        print("[NetworkManager] PCM format: \(pcmFormat)")
+        print("[NetworkManager] Output format: \(outputFormat)")
+
         receiverEngine.connect(receiverPlayerNode, to: mainMixer, format: pcmFormat)
         receiverEngine.connect(mainMixer, to: outputNode, format: outputFormat)
 
@@ -479,22 +490,28 @@ final class NetworkManager: NSObject, AudioManaging {
         do {
             try receiverEngine.start()
             receiverPlayerNode.play()
+            print("[NetworkManager] Receiver engine started")
         } catch {
-            print("Failed to start receiver engine: \(error)")
+            print("[NetworkManager] Failed to start receiver engine: \(error)")
             self.receiverEngine = nil
         }
     }
 
     private func playAudioData(_ data: Data) {
+        print("[NetworkManager] playAudioData called with \(data.count) bytes")
         audioEngineQueue.async { [weak self] in
             guard let self = self else { return }
 
             self.setupReceiverEngineIfNeeded()
 
             guard self.receiverEngine != nil,
-                  let receiverPlayerNode = self.receiverPlayerNode else { return }
+                  let receiverPlayerNode = self.receiverPlayerNode else {
+                print("[NetworkManager] playAudioData: receiver engine or player node is nil")
+                return
+            }
 
             let frameCount = AVAudioFrameCount(data.count / MemoryLayout<Float>.size)
+            print("[NetworkManager] playAudioData: frameCount = \(frameCount)")
             guard frameCount > 0 else { return }
 
             let pcmFormat = AVAudioFormat(standardFormatWithSampleRate: self.remoteSampleRate, channels: 1)!
@@ -514,9 +531,11 @@ final class NetworkManager: NSObject, AudioManaging {
             }
 
             receiverPlayerNode.scheduleBuffer(buffer, completionHandler: nil)
+            print("[NetworkManager] playAudioData: scheduled buffer")
 
             if !receiverPlayerNode.isPlaying {
                 receiverPlayerNode.play()
+                print("[NetworkManager] playAudioData: started playing")
             }
         }
     }

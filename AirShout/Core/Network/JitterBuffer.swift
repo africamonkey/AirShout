@@ -10,9 +10,11 @@ class JitterBuffer {
         lock.lock()
         defer { lock.unlock() }
 
+        print("[JitterBuffer] Inserting packet timestamp=\(packet.timestamp), payload=\(packet.payload.count), bufferCount=\(packets.count)")
         let insertIndex = packets.firstIndex { $0.timestamp > packet.timestamp }
             ?? packets.endIndex
         packets.insert(packet, at: insertIndex)
+        print("[JitterBuffer] After insert, bufferCount=\(packets.count)")
     }
 
     func popIfReady(currentTimeMs: UInt64) -> AudioPacket? {
