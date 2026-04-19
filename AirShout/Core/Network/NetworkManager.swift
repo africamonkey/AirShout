@@ -58,6 +58,7 @@ final class NetworkManager: NSObject, AudioManaging {
     private var playbackTimer: Timer?
     private let connectionsQueue = DispatchQueue(label: "com.airshout.network.connections")
     private var activeConnection: NWConnection?
+    private var isReceiving: Bool = false
 
     private override init() {
         super.init()
@@ -130,7 +131,7 @@ final class NetworkManager: NSObject, AudioManaging {
                 DispatchQueue.main.async {
                     self.connectionStatus = .connected
                 }
-                self.startPlaybackTimer()
+                self.startReceiving()
                 self.receiveData(from: conn)
             case .failed(let error):
                 print("Server connection failed: \(error)")
@@ -183,7 +184,7 @@ final class NetworkManager: NSObject, AudioManaging {
                 DispatchQueue.main.async {
                     self.connectionStatus = .connected
                 }
-                self.startPlaybackTimer()
+                self.startReceiving()
                 self.receiveData(from: self.clientConnection)
             case .failed(let error):
                 print("Client connection failed: \(error)")
@@ -222,8 +223,8 @@ final class NetworkManager: NSObject, AudioManaging {
             self.activeConnection = nil
         }
 
+        stopReceiving()
         stopAudioEngines()
-        stopPlaybackTimer()
 
         DispatchQueue.main.async { [weak self] in
             self?.isRunning = false
@@ -255,7 +256,7 @@ final class NetworkManager: NSObject, AudioManaging {
             }
         }
 
-        startPlaybackTimer()
+        startReceiving()
 
         DispatchQueue.main.async { [weak self] in
             self?.isRunning = true
@@ -266,7 +267,6 @@ final class NetworkManager: NSObject, AudioManaging {
     func stop() {
         audioEngineQueue.async { [weak self] in
             self?.stopSenderEngine()
-            self?.stopPlaybackTimer()
 
             DispatchQueue.main.async {
                 self?.isRunning = false
@@ -419,7 +419,6 @@ final class NetworkManager: NSObject, AudioManaging {
         }
 
         if receiverEngine == nil {
-            Swift.print("[NetworkManager] Configuring audio session for playback")
             do {
                 try AudioSessionConfig.configure(audioSession)
             } catch {
@@ -429,8 +428,10 @@ final class NetworkManager: NSObject, AudioManaging {
     }
 
     private func schedulePacketsFromBuffer() {
+        guard isReceiving else { return }
+
         audioEngineQueue.async { [weak self] in
-            guard let self = self else { return }
+            guard let self = self, self.isReceiving else { return }
 
             self.setupReceiverEngineIfNeeded()
             guard let receiverPlayerNode = self.receiverPlayerNode else { return }
@@ -458,37 +459,15 @@ final class NetworkManager: NSObject, AudioManaging {
                 receiverPlayerNode.scheduleBuffer(buffer, completionHandler: nil)
             }
 
-            if !receiverPlayerNode.isPlaying {
+            if !receiverPlayerNode.isPlaying && !self.jitterBuffer.isEmpty {
                 receiverPlayerNode.play()
             }
         }
     }
 
-    private func startPlaybackTimer() {
-        stopPlaybackTimer()
-
-        DispatchQueue.main.async { [weak self] in
-            self?.playbackTimer = Timer.scheduledTimer(withTimeInterval: 0.01, repeats: true) { [weak self] _ in
-                self?.checkPlayback()
-            }
-        }
-    }
-
-    private func stopPlaybackTimer() {
-        DispatchQueue.main.async { [weak self] in
-            self?.playbackTimer?.invalidate()
-            self?.playbackTimer = nil
-        }
-    }
-
-    private func checkPlayback() {
-        schedulePacketsFromBuffer()
-    }
-
     private func setupReceiverEngineIfNeeded() {
         guard receiverEngine == nil else { return }
 
-        print("[NetworkManager] Setting up receiver audio engine")
         receiverEngine = AVAudioEngine()
         guard let receiverEngine = receiverEngine else { return }
 
@@ -503,9 +482,6 @@ final class NetworkManager: NSObject, AudioManaging {
         let pcmFormat = AVAudioFormat(standardFormatWithSampleRate: remoteSampleRate, channels: 1)!
         let outputFormat = outputNode.inputFormat(forBus: 0)
 
-        print("[NetworkManager] PCM format: \(pcmFormat)")
-        print("[NetworkManager] Output format: \(outputFormat)")
-
         receiverEngine.connect(receiverPlayerNode, to: mainMixer, format: pcmFormat)
         receiverEngine.connect(mainMixer, to: outputNode, format: outputFormat)
 
@@ -514,10 +490,20 @@ final class NetworkManager: NSObject, AudioManaging {
         do {
             try receiverEngine.start()
             receiverPlayerNode.play()
-            print("[NetworkManager] Receiver engine started")
         } catch {
-            print("[NetworkManager] Failed to start receiver engine: \(error)")
             self.receiverEngine = nil
+        }
+    }
+
+    private func startReceiving() {
+        connectionsQueue.async { [weak self] in
+            self?.isReceiving = true
+        }
+    }
+
+    private func stopReceiving() {
+        connectionsQueue.async { [weak self] in
+            self?.isReceiving = false
         }
     }
 
@@ -533,6 +519,7 @@ final class NetworkManager: NSObject, AudioManaging {
             self?.jitterBuffer.clear()
             self?.packetProcessor.reset()
             self?.remoteSampleRate = 44100
+            self?.isReceiving = false
         }
     }
 }

@@ -11,11 +11,9 @@ class JitterBuffer {
         lock.lock()
         defer { lock.unlock() }
 
-        print("[JitterBuffer] Inserting packet timestamp=\(packet.timestamp), payload=\(packet.payload.count), bufferCount=\(packets.count)")
         let insertIndex = packets.firstIndex { $0.timestamp > packet.timestamp }
             ?? packets.endIndex
         packets.insert(packet, at: insertIndex)
-        print("[JitterBuffer] After insert, bufferCount=\(packets.count)")
     }
 
     func popIfReady(currentTimeMs: UInt64) -> AudioPacket? {
@@ -27,7 +25,6 @@ class JitterBuffer {
         if packets.count > 50 {
             totalDropped += packets.count - 50
             packets.removeFirst(packets.count - 50)
-            print("[JitterBuffer] WARNING: Bulk dropped to 50, total dropped=\(totalDropped)")
             return packets.first
         }
 
@@ -43,7 +40,6 @@ class JitterBuffer {
             let removed = packets.count - maxCount
             totalDropped += removed
             packets.removeFirst(removed)
-            print("[JitterBuffer] Cleanup removed \(removed) packets, total dropped=\(totalDropped)")
         }
     }
 
