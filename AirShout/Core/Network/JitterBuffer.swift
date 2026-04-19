@@ -45,6 +45,12 @@ class JitterBuffer {
         return packets.count
     }
 
+    var isEmpty: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return packets.isEmpty
+    }
+
     func clear() {
         lock.lock()
         defer { lock.unlock() }

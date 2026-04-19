@@ -435,7 +435,7 @@ final class NetworkManager: NSObject, AudioManaging {
     }
 
     private func checkPlayback() {
-        guard isRunning else { return }
+        guard !jitterBuffer.isEmpty else { return }
 
         let currentTimeMs = UInt64(DispatchTime.now().uptimeNanoseconds / 1_000_000)
 
