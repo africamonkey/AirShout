@@ -131,6 +131,7 @@ final class NetworkManager: NSObject, AudioManaging {
                 DispatchQueue.main.async {
                     self.connectionStatus = .connected
                 }
+                self.startPlaybackTimer()
                 self.receiveData(from: conn)
             case .failed(let error):
                 print("Server connection failed: \(error)")
@@ -183,6 +184,7 @@ final class NetworkManager: NSObject, AudioManaging {
                 DispatchQueue.main.async {
                     self.connectionStatus = .connected
                 }
+                self.startPlaybackTimer()
                 self.receiveData(from: self.clientConnection)
             case .failed(let error):
                 print("Client connection failed: \(error)")
@@ -415,6 +417,14 @@ final class NetworkManager: NSObject, AudioManaging {
                 }
             }
         }
+
+        if receiverEngine == nil {
+            do {
+                try AudioSessionConfig.configure(audioSession)
+            } catch {
+                print("Failed to configure audio session for playback: \(error)")
+            }
+        }
     }
 
     private func startPlaybackTimer() {
@@ -435,8 +445,6 @@ final class NetworkManager: NSObject, AudioManaging {
     }
 
     private func checkPlayback() {
-        guard !jitterBuffer.isEmpty else { return }
-
         let currentTimeMs = UInt64(DispatchTime.now().uptimeNanoseconds / 1_000_000)
 
         if let packet = jitterBuffer.popIfReady(currentTimeMs: currentTimeMs) {
