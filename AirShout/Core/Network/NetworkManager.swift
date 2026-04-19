@@ -83,14 +83,14 @@ final class NetworkManager: NSObject, AudioManaging {
             guard let self = self else { return }
             switch state {
             case .ready:
-                print("TCP Listener ready on port \(port)")
+                Swift.print("TCP Listener ready on port \(port)")
             case .failed(let error):
-                print("TCP Listener failed: \(error)")
+                Swift.print("TCP Listener failed: \(error)")
                 DispatchQueue.main.async {
                     self.connectionStatus = .error("监听失败: \(error.localizedDescription)")
                 }
             case .cancelled:
-                print("TCP Listener cancelled")
+                Swift.print("TCP Listener cancelled")
             default:
                 break
             }
@@ -127,7 +127,6 @@ final class NetworkManager: NSObject, AudioManaging {
             guard let self = self else { return }
             switch state {
             case .ready:
-                print("Server connection ready")
                 DispatchQueue.main.async {
                     self.connectionStatus = .connected
                 }
@@ -501,20 +500,15 @@ final class NetworkManager: NSObject, AudioManaging {
     }
 
     private func playAudioData(_ data: Data) {
-        print("[NetworkManager] playAudioData called with \(data.count) bytes")
         audioEngineQueue.async { [weak self] in
             guard let self = self else { return }
 
             self.setupReceiverEngineIfNeeded()
 
             guard self.receiverEngine != nil,
-                  let receiverPlayerNode = self.receiverPlayerNode else {
-                print("[NetworkManager] playAudioData: receiver engine or player node is nil")
-                return
-            }
+                  let receiverPlayerNode = self.receiverPlayerNode else { return }
 
             let frameCount = AVAudioFrameCount(data.count / MemoryLayout<Float>.size)
-            print("[NetworkManager] playAudioData: frameCount = \(frameCount)")
             guard frameCount > 0 else { return }
 
             let pcmFormat = AVAudioFormat(standardFormatWithSampleRate: self.remoteSampleRate, channels: 1)!
@@ -533,13 +527,14 @@ final class NetworkManager: NSObject, AudioManaging {
                 memcpy(dstAddress, srcAddress, byteSize)
             }
 
-            receiverPlayerNode.scheduleBuffer(buffer, completionHandler: nil)
-            print("[NetworkManager] playAudioData: scheduled buffer")
-
+            let semaphore = DispatchSemaphore(value: 0)
+            receiverPlayerNode.scheduleBuffer(buffer) {
+                semaphore.signal()
+            }
             if !receiverPlayerNode.isPlaying {
                 receiverPlayerNode.play()
-                print("[NetworkManager] playAudioData: started playing")
             }
+            semaphore.wait()
         }
     }
 
