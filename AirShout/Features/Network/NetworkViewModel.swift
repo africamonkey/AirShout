@@ -4,7 +4,7 @@ import Network
 
 final class NetworkViewModel: ObservableObject {
     @Published var localIP: String = ""
-    @Published var localPort: String = "8080"
+    @Published var localPort: String = "38800"
     @Published var savedConnections: [SavedConnection] = []
     @Published var selectedConnection: SavedConnection?
     @Published var isListening: Bool = false

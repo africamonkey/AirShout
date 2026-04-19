@@ -33,7 +33,7 @@ final class NetworkManager: NSObject, AudioManaging {
     private var listener: NWListener?
     private var clientConnection: NWConnection?
     private var serverConnections: [NWConnection] = []
-    private var localPort: UInt16 = 8080
+    private var localPort: UInt16 = 38800
 
     private var isServerMode: Bool = false
 
