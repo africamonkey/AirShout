@@ -30,18 +30,21 @@ struct ConnectionListView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 20)
             } else {
-                ForEach(savedConnections) { connection in
-                    ConnectionItemView(
-                        connection: connection,
-                        isSelected: selectedConnection?.id == connection.id
-                    )
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        selectedConnection = connection
-                        onSelect(connection)
+                List {
+                    ForEach(savedConnections) { connection in
+                        ConnectionItemView(
+                            connection: connection,
+                            isSelected: selectedConnection?.id == connection.id
+                        )
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            selectedConnection = connection
+                            onSelect(connection)
+                        }
                     }
+                    .onDelete(perform: onDelete)
                 }
-                .onDelete(perform: onDelete)
+                .listStyle(.plain)
             }
         }
         .padding()
