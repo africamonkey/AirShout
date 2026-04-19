@@ -5,6 +5,7 @@ class JitterBuffer {
     var targetDelayMs: Int = 100
 
     private let lock = NSLock()
+    private var totalDropped = 0
 
     func insert(_ packet: AudioPacket) {
         lock.lock()
@@ -23,17 +24,15 @@ class JitterBuffer {
 
         guard let oldest = packets.first else { return nil }
 
-        if packets.count > 20 {
-            packets.removeFirst()
-            return oldest
+        if packets.count > 50 {
+            totalDropped += packets.count - 50
+            packets.removeFirst(packets.count - 50)
+            print("[JitterBuffer] WARNING: Bulk dropped to 50, total dropped=\(totalDropped)")
+            return packets.first
         }
 
-        let playbackTime = oldest.timestamp + UInt64(targetDelayMs)
-        if currentTimeMs >= playbackTime || packets.count > 5 {
-            packets.removeFirst()
-            return oldest
-        }
-        return nil
+        packets.removeFirst()
+        return oldest
     }
 
     func cleanup(maxCount: Int = 100) {
@@ -41,7 +40,10 @@ class JitterBuffer {
         defer { lock.unlock() }
 
         if packets.count > maxCount {
-            packets.removeFirst(packets.count - maxCount)
+            let removed = packets.count - maxCount
+            totalDropped += removed
+            packets.removeFirst(removed)
+            print("[JitterBuffer] Cleanup removed \(removed) packets, total dropped=\(totalDropped)")
         }
     }
 

@@ -450,12 +450,16 @@ final class NetworkManager: NSObject, AudioManaging {
 
     private func checkPlayback() {
         let currentTimeMs = UInt64(DispatchTime.now().uptimeNanoseconds / 1_000_000)
+        var played = 0
+        var skipped = 0
 
-        if let packet = jitterBuffer.popIfReady(currentTimeMs: currentTimeMs) {
-            print("[NetworkManager] checkPlayback popping packet with timestamp \(packet.timestamp), payload size \(packet.payload.count)")
+        while let packet = jitterBuffer.popIfReady(currentTimeMs: currentTimeMs) {
             playAudioData(packet.payload)
-        } else {
-            print("[NetworkManager] checkPlayback: no packet ready, buffer count = \(jitterBuffer.count)")
+            played += 1
+        }
+
+        if played > 0 {
+            print("[NetworkManager] checkPlayback: played \(played) packets, buffer=\(jitterBuffer.count)")
         }
 
         jitterBuffer.cleanup()
