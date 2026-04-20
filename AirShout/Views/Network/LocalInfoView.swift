@@ -9,27 +9,27 @@ struct LocalInfoView: View {
     var onStopListening: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("本机信息")
-                .font(.headline)
-                .padding(.bottom, 4)
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 4) {
+                    Text("本机IP:")
+                        .foregroundColor(.secondary)
+                    Text(localIP)
+                        .fontWeight(.medium)
+                }
 
-            HStack {
-                Text("IP:")
-                    .foregroundColor(.secondary)
-                Text(localIP)
-                    .fontWeight(.medium)
+                HStack(spacing: 4) {
+                    Text("监听端口:")
+                        .foregroundColor(.secondary)
+                    TextField("端口", text: $localPort)
+                        .keyboardType(.numberPad)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 80)
+                        .disabled(isListening)
+                }
             }
 
-            HStack {
-                Text("端口:")
-                    .foregroundColor(.secondary)
-                TextField("端口", text: $localPort)
-                    .keyboardType(.numberPad)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: 100)
-                    .disabled(isListening)
-            }
+            Spacer()
 
             Button(action: {
                 if isListening {
@@ -38,17 +38,18 @@ struct LocalInfoView: View {
                     onStartListening()
                 }
             }) {
-                HStack {
+                HStack(spacing: 4) {
                     Image(systemName: isListening ? "stop.fill" : "play.fill")
-                    Text(isListening ? "停止监听" : "开始监听")
+                    Text(isListening ? "停止" : "监听")
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
                 .background(isListening ? Color.red.opacity(0.8) : Color.green.opacity(0.8))
                 .foregroundColor(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
             }
             .disabled(localPort.isEmpty)
+            .padding(.top, 4)
         }
         .padding()
         .background(.ultraThinMaterial)

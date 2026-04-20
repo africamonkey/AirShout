@@ -56,7 +56,6 @@ struct NetworkView: View {
                 }
             }
             .padding()
-            .navigationTitle("网络")
             .sheet(isPresented: $viewModel.showAddConnection) {
                 AddConnectionSheet(
                     isPresented: $viewModel.showAddConnection,
