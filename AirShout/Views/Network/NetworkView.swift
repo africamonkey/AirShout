@@ -3,6 +3,17 @@ import SwiftUI
 struct NetworkView: View {
     @StateObject private var viewModel = NetworkViewModel()
 
+    private var buttonBackgroundColor: Color {
+        let canStart = viewModel.selectedConnection != nil && viewModel.connectionStatus != .connecting
+        if viewModel.isTransmitting {
+            return .red
+        } else if canStart {
+            return .blue
+        } else {
+            return .gray
+        }
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 16) {
@@ -45,7 +56,7 @@ struct NetworkView: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(viewModel.isTransmitting ? Color.red : Color.blue)
+                            .background(buttonBackgroundColor)
                             .foregroundColor(.white)
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                         }

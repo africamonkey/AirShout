@@ -134,8 +134,17 @@ final class NetworkManager: NSObject, AudioManaging {
                     self.serverConnections.removeAll { $0 === conn }
                     self.activeConnection = self.serverConnections.first
                 }
-                DispatchQueue.main.async {
-                    self.connectionStatus = .error("连接失败: \(error.localizedDescription)")
+                let isConnectionReset = self.isConnectionResetError(error)
+                if isConnectionReset || self.serverConnections.isEmpty {
+                    DispatchQueue.main.async {
+                        if self.isRunning == false {
+                            self.connectionStatus = .disconnected
+                        }
+                    }
+                } else {
+                    DispatchQueue.main.async {
+                        self.connectionStatus = .error("连接失败: \(error.localizedDescription)")
+                    }
                 }
             case .cancelled:
                 self.connectionsQueue.async { [weak self] in
@@ -491,6 +500,13 @@ final class NetworkManager: NSObject, AudioManaging {
         connectionsQueue.async { [weak self] in
             self?.isReceiving = false
         }
+    }
+
+    private func isConnectionResetError(_ error: NWError) -> Bool {
+        if case .posix(let code) = error {
+            return code == .ECONNRESET
+        }
+        return false
     }
 
     private func stopAudioEngines() {
