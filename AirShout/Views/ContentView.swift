@@ -18,7 +18,7 @@ struct ContentView: View {
 
             VStack(spacing: 24) {
                 HStack {
-                    Text("向 AirPlay 设备喊话")
+                    Text("content.airplay.title")
                         .font(.headline)
                         .fontWeight(.bold)
 
@@ -52,15 +52,15 @@ struct ContentView: View {
             }
             .padding()
         }
-        .alert("麦克风权限被拒绝", isPresented: $viewModel.showPermissionAlert) {
-            Button("打开设置") {
+        .alert("content.airplay.permission.denied", isPresented: $viewModel.showPermissionAlert) {
+            Button("content.airplay.permission.settings") {
                 if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
                     UIApplication.shared.open(settingsURL)
                 }
             }
             Button("取消", role: .cancel) { }
         } message: {
-            Text("请在设置中开启麦克风权限以使用隔空喊话功能")
+            Text("content.airplay.permission.message")
         }
         .sheet(isPresented: $showOnboarding) {
             OnboardingView(isPresented: $showOnboarding)
