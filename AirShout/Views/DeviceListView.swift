@@ -3,13 +3,13 @@ import AVKit
 import AVFAudio
 
 struct DeviceListView: View {
-    @State private var currentRouteName: String = "未选择设备"
+    @State private var currentRouteName: String = String(localized: "device.none")
     @State private var routeChangeObserver: NSObjectProtocol?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("选择设备")
+                Text("device.select")
                     .font(.headline)
                 Spacer()
                 AirPlayPicker()
@@ -49,7 +49,7 @@ struct DeviceListView: View {
     }
 
     private func updateRouteName() {
-        currentRouteName = AVAudioSession.sharedInstance().currentRoute.outputs.first?.portName ?? "未选择设备"
+        currentRouteName = AVAudioSession.sharedInstance().currentRoute.outputs.first?.portName ?? String(localized: "device.none")
     }
 }
 
