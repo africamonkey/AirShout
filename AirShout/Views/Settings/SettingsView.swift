@@ -66,7 +66,7 @@ struct WaveformStylePickerView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private func descriptionFor(_ style: WaveformStyle) -> String {
+    private func descriptionFor(_ style: WaveformStyle) -> LocalizedStringKey {
         switch style {
         case .classic: return "waveform.style.classic"
         case .pulse: return "waveform.style.pulse"
