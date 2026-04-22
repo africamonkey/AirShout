@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @AppStorage("com.airshout.waveformStyle", store: UserDefaults(suiteName: "com.airshout"))
+    @AppStorage("com.airshout.waveformStyle")
     private var waveformStyleRaw: String = WaveformStyle.classic.rawValue
 
     private var waveformStyle: WaveformStyle {
