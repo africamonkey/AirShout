@@ -32,7 +32,10 @@ struct ContentView: View {
 
                 Spacer()
 
-                WaveformView(audioLevel: viewModel.audioLevel)
+                WaveformView(
+                    audioLevel: viewModel.audioLevel,
+                    style: WaveformStyle(rawValue: UserPreferences.shared.waveformStyle) ?? .classic
+                )
                     .frame(height: 60)
 
                 Spacer()
