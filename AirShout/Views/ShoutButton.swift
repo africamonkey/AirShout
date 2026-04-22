@@ -36,7 +36,7 @@ struct ShoutButton: View {
                 .stroke(Color.white.opacity(0.4), lineWidth: 3)
                 .frame(width: 110, height: 110)
 
-            Text(isActive ? "停止" : "开始")
+            Text(isActive ? "shout.stop" : "shout.start")
                 .font(.headline)
                 .fontWeight(.semibold)
                 .foregroundColor(.white)
