@@ -339,12 +339,12 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "(Pro)"
+            "value" : "(Professional Edition)"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "（专业版）"
           }
         }
