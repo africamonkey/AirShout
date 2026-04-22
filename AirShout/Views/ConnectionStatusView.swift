@@ -42,13 +42,13 @@ struct ConnectionStatusView: View {
     private var statusText: String {
         switch status {
         case .disconnected:
-            return "未连接"
+            return String(localized: "status.disconnected")
         case .connecting:
-            return "连接中..."
+            return String(localized: "status.connecting")
         case .connected:
-            return "已连接"
+            return String(localized: "status.connected")
         case .transmitting:
-            return "传输中"
+            return String(localized: "status.transmitting")
         case .error(let message):
             return message
         }
