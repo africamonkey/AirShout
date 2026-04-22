@@ -12,16 +12,16 @@ struct LocalInfoView: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 4) {
-                    Text("本机IP:")
+                    Text("local.ip")
                         .foregroundColor(.secondary)
                     Text(localIP)
                         .fontWeight(.medium)
                 }
 
                 HStack(spacing: 4) {
-                    Text("接收端口:")
+                    Text("local.port")
                         .foregroundColor(.secondary)
-                    TextField("端口", text: $localPort)
+                    TextField("local.port.placeholder", text: $localPort)
                         .keyboardType(.numberPad)
                         .textFieldStyle(.roundedBorder)
                         .frame(width: 80)
@@ -40,7 +40,7 @@ struct LocalInfoView: View {
             }) {
                 HStack(spacing: 4) {
                     Image(systemName: isListening ? "stop.fill" : "play.fill")
-                    Text(isListening ? "停止接收" : "开始接收")
+                    Text(isListening ? "local.stop.receive" : "local.start.receive")
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
