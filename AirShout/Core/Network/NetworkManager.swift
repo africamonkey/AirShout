@@ -12,13 +12,13 @@ enum NetworkError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .portInUse:
-            return "端口已被占用，请更换端口"
+            return String(localized: "network.error.port.in.use", defaultValue: "Port is already in use, please change port")
         case .connectionFailed(let reason):
-            return "连接失败: \(reason)"
+            return String(localized: "network.error.connection.failed.with.reason", defaultValue: "Connection failed: \(reason)")
         case .notConnected:
-            return "未连接到任何设备"
+            return String(localized: "network.error.not.connected", defaultValue: "Not connected to any device")
         case .engineSetupFailed:
-            return "音频引擎设置失败"
+            return String(localized: "audio.error.engine.setup.failed", defaultValue: "Audio engine setup failed")
         }
     }
 }
@@ -83,7 +83,7 @@ final class NetworkManager: NSObject, AudioManaging {
             case .failed(let error):
                 Swift.print("TCP Listener failed: \(error)")
                 DispatchQueue.main.async {
-                    self.connectionStatus = .error("监听失败: \(error.localizedDescription)")
+                    self.connectionStatus = .error(String(localized: "network.listen.failed", defaultValue: "Listen failed: \(error.localizedDescription)"))
                 }
             case .cancelled:
                 Swift.print("TCP Listener cancelled")
@@ -143,7 +143,7 @@ final class NetworkManager: NSObject, AudioManaging {
                     }
                 } else {
                     DispatchQueue.main.async {
-                        self.connectionStatus = .error("连接失败: \(error.localizedDescription)")
+self.connectionStatus = .error(String(localized: "network.connection.failed", defaultValue: "Connection failed: \(error.localizedDescription)"))
                     }
                 }
             case .cancelled:
@@ -198,7 +198,7 @@ final class NetworkManager: NSObject, AudioManaging {
                     self.activeConnection = nil
                 }
                 DispatchQueue.main.async {
-                    self.connectionStatus = .error("连接失败: \(error.localizedDescription)")
+                    self.connectionStatus = .error(String(localized: "network.connection.failed", defaultValue: "Connection failed: \(error.localizedDescription)"))
                 }
             case .cancelled:
                 print("Client connection cancelled")

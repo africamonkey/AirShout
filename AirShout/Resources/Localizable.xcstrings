@@ -334,6 +334,86 @@
         }
       }
     },
+    "network.connection.failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection failed: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接失败: %@"
+          }
+        }
+      }
+    },
+    "network.error.connection.failed.with.reason" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection failed: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接失败: %@"
+          }
+        }
+      }
+    },
+    "network.error.not.connected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not connected to any device"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未连接到任何设备"
+          }
+        }
+      }
+    },
+    "network.error.port.in.use" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Port is already in use, please change port"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "端口已被占用，请更换端口"
+          }
+        }
+      }
+    },
+    "network.listen.failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listen failed: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "监听失败: %@"
+          }
+        }
+      }
+    },
     "network.pro" : {
       "localizations" : {
         "en" : {
@@ -554,6 +634,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "欢迎使用 %@"
+          }
+        }
+      }
+    },
+    "audio.error.engine.setup.failed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio engine setup failed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音频引擎设置失败"
+          }
+        }
+      }
+    },
+    "audio.error.microphone.permission.denied" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone permission denied"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "麦克风权限被拒绝"
+          }
+        }
+      }
+    },
+    "audio.error.no.input.available" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No input device available. Please ensure an audio output device is selected."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有可用的输入设备，请确保已选择音频输出设备"
           }
         }
       }

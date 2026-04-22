@@ -21,11 +21,11 @@ enum AudioError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .microphonePermissionDenied:
-            return "麦克风权限被拒绝"
+            return String(localized: "audio.error.microphone.permission.denied", defaultValue: "Microphone permission denied")
         case .engineSetupFailed:
-            return "音频引擎设置失败"
+            return String(localized: "audio.error.engine.setup.failed", defaultValue: "Audio engine setup failed")
         case .noInputAvailable:
-            return "没有可用的输入设备，请确保已选择音频输出设备"
+            return String(localized: "audio.error.no.input.available", defaultValue: "No input device available. Please ensure an audio output device is selected.")
         }
     }
 }
