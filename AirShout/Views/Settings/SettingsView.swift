@@ -12,12 +12,12 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("外观") {
+                Section("settings.appearance") {
                     NavigationLink {
                         WaveformStylePickerView(style: $waveformStyleRaw)
                     } label: {
                         HStack {
-                            Text("波形样式")
+                            Text("settings.waveform.style")
                             Spacer()
                             Text(waveformStyle.displayName)
                                 .foregroundColor(.secondary)
@@ -25,7 +25,7 @@ struct SettingsView: View {
                     }
                 }
             }
-            .navigationTitle("设置")
+            .navigationTitle("settings.title")
         }
     }
 }
@@ -62,15 +62,15 @@ struct WaveformStylePickerView: View {
                 .buttonStyle(.plain)
             }
         }
-        .navigationTitle("波形样式")
+        .navigationTitle("settings.waveform.style")
         .navigationBarTitleDisplayMode(.inline)
     }
 
     private func descriptionFor(_ style: WaveformStyle) -> String {
         switch style {
-        case .classic: return "中央发光，渐变紫色条形柱"
-        case .pulse: return "环形雷达式波形"
-        case .wave: return "平滑曲线连接，现代流线风格"
+        case .classic: return "waveform.style.classic"
+        case .pulse: return "waveform.style.pulse"
+        case .wave: return "waveform.style.wave"
         }
     }
 }
