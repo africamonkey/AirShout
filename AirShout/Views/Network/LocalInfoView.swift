@@ -19,7 +19,7 @@ struct LocalInfoView: View {
                 }
 
                 HStack(spacing: 4) {
-                    Text("监听端口:")
+                    Text("接收端口:")
                         .foregroundColor(.secondary)
                     TextField("端口", text: $localPort)
                         .keyboardType(.numberPad)
@@ -40,7 +40,7 @@ struct LocalInfoView: View {
             }) {
                 HStack(spacing: 4) {
                     Image(systemName: isListening ? "stop.fill" : "play.fill")
-                    Text(isListening ? "停止" : "监听")
+                    Text(isListening ? "停止接收" : "开始接收")
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)

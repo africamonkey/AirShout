@@ -6,7 +6,7 @@ struct P2PView: View {
     var body: some View {
         VStack(spacing: 24) {
             HStack {
-                Text("在线设备")
+                Text("局域网内的在线设备")
                     .font(.headline)
                 Spacer()
                 Button {

@@ -5,17 +5,17 @@ struct MainTabView: View {
         TabView {
             ContentView()
                 .tabItem {
-                    Label("AirPlay", systemImage: "airplayaudio")
+                    Label("AirPlay 喊话", systemImage: "airplayaudio")
                 }
 
             P2PView()
                 .tabItem {
-                    Label("AirShout", systemImage: "wave.3.right")
+                    Label("附近设备", systemImage: "antenna.radiowaves.left.and.right")
                 }
 
             NetworkView()
                 .tabItem {
-                    Label("网络", systemImage: "network")
+                    Label("手动连接", systemImage: "link")
                 }
         }
     }

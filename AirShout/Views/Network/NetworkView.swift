@@ -16,6 +16,10 @@ struct NetworkView: View {
 
     var body: some View {
         NavigationStack {
+            Text("手动输入 IP 地址连接")
+                .font(.headline)
+            Text("（专业版）")
+                .font(.footnote)
             VStack(spacing: 16) {
                 LocalInfoView(
                     localIP: $viewModel.localIP,
@@ -52,7 +56,7 @@ struct NetworkView: View {
                         }) {
                             HStack {
                                 Image(systemName: viewModel.isTransmitting ? "stop.fill" : "play.fill")
-                                Text(viewModel.isTransmitting ? "停止传输" : "开始传输")
+                                Text(viewModel.isTransmitting ? "停止发送" : "开始发送")
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)

@@ -18,8 +18,8 @@ struct ContentView: View {
 
             VStack(spacing: 24) {
                 HStack {
-                    Text("AirShout")
-                        .font(.largeTitle)
+                    Text("向 AirPlay 设备喊话")
+                        .font(.headline)
                         .fontWeight(.bold)
 
                     Spacer()
