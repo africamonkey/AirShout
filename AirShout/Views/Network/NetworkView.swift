@@ -80,7 +80,7 @@ struct NetworkView: View {
                 )
             }
             .alert("network.error", isPresented: .constant(viewModel.errorMessage != nil)) {
-                Button("确定") {
+                Button("alert.confirm") {
                     viewModel.errorMessage = nil
                 }
             } message: {

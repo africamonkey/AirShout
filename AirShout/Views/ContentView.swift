@@ -61,7 +61,7 @@ struct ContentView: View {
                     UIApplication.shared.open(settingsURL)
                 }
             }
-            Button("取消", role: .cancel) { }
+            Button("alert.cancel", role: .cancel) { }
         } message: {
             Text("content.airplay.permission.message")
         }
