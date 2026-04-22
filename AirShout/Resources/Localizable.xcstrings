@@ -1,6 +1,438 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "tab.airplay" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirPlay Shout"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirPlay 喊话"
+          }
+        }
+      }
+    },
+    "tab.nearby" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nearby"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "附近设备"
+          }
+        }
+      }
+    },
+    "tab.manual" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manual Connect"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手动连接"
+          }
+        }
+      }
+    },
+    "content.airplay.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shout to AirPlay"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "向 AirPlay 设备喊话"
+          }
+        }
+      }
+    },
+    "content.airplay.permission.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone Access Denied"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "麦克风权限被拒绝"
+          }
+        }
+      }
+    },
+    "content.airplay.permission.message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please enable microphone access in Settings to use AirShout"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请在设置中开启麦克风权限以使用隔空喊话功能"
+          }
+        }
+      }
+    },
+    "content.airplay.permission.settings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开设置"
+          }
+        }
+      }
+    },
+    "device.select" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select Device"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择设备"
+          }
+        }
+      }
+    },
+    "device.none" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Device Selected"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未选择设备"
+          }
+        }
+      }
+    },
+    "status.disconnected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disconnected"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未连接"
+          }
+        }
+      }
+    },
+    "status.connecting" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecting..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接中..."
+          }
+        }
+      }
+    },
+    "status.connected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已连接"
+          }
+        }
+      }
+    },
+    "status.transmitting" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transmitting"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "传输中"
+          }
+        }
+      }
+    },
+    "shout.start" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始"
+          }
+        }
+      }
+    },
+    "shout.stop" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止"
+          }
+        }
+      }
+    },
+    "network.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter IP Address to Connect"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手动输入 IP 地址连接"
+          }
+        }
+      }
+    },
+    "network.pro" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(Pro)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "（专业版）"
+          }
+        }
+      }
+    },
+    "network.start.send" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Sending"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始发送"
+          }
+        }
+      }
+    },
+    "network.stop.send" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop Sending"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止发送"
+          }
+        }
+      }
+    },
+    "network.error" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "错误"
+          }
+        }
+      }
+    },
+    "local.ip" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local IP:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本机IP:"
+          }
+        }
+      }
+    },
+    "local.port" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Receive Port:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接收端口:"
+          }
+        }
+      }
+    },
+    "local.port.placeholder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Port"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "端口"
+          }
+        }
+      }
+    },
+    "local.start.receive" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Receiving"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始接收"
+          }
+        }
+      }
+    },
+    "local.stop.receive" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop Receiving"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止接收"
+          }
+        }
+      }
+    },
+    "connections.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved Connections"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已保存的连接"
+          }
+        }
+      }
+    },
+    "connections.empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Saved Connections"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂无保存的连接"
+          }
+        }
+      }
+    },
     "connections.add" : {
       "localizations" : {
         "en" : {
@@ -15,187 +447,295 @@
             "value" : "添加连接"
           }
         }
-      },
-    },
-    "connections.cancel" : {
-      "en" : "Cancel",
-      "zh-Hans" : "取消"
-    },
-    "connections.empty" : {
-      "en" : "No Saved Connections",
-      "zh-Hans" : "暂无保存的连接"
-    },
-    "connections.ip.placeholder" : {
-      "en" : "IP Address",
-      "zh-Hans" : "IP地址"
+      }
     },
     "connections.name.placeholder" : {
-      "en" : "Name",
-      "zh-Hans" : "名称"
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "名称"
+          }
+        }
+      }
+    },
+    "connections.ip.placeholder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IP Address"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IP地址"
+          }
+        }
+      }
     },
     "connections.port.placeholder" : {
-      "en" : "Port",
-      "zh-Hans" : "端口"
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Port"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "端口"
+          }
+        }
+      }
+    },
+    "connections.cancel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消"
+          }
+        }
+      }
     },
     "connections.save" : {
-      "en" : "Save",
-      "zh-Hans" : "保存"
-    },
-    "connections.title" : {
-      "en" : "Saved Connections",
-      "zh-Hans" : "已保存的连接"
-    },
-    "content.airplay.permission.message" : {
-      "en" : "Please enable microphone access in Settings to use AirShout",
-      "zh-Hans" : "请在设置中开启麦克风权限以使用隔空喊话功能"
-    },
-    "content.airplay.permission.settings" : {
-      "en" : "Open Settings",
-      "zh-Hans" : "打开设置"
-    },
-    "content.airplay.permission.title" : {
-      "en" : "Microphone Access Denied",
-      "zh-Hans" : "麦克风权限被拒绝"
-    },
-    "content.airplay.title" : {
-      "en" : "Shout to AirPlay",
-      "zh-Hans" : "向 AirPlay 设备喊话"
-    },
-    "device.none" : {
-      "en" : "No Device Selected",
-      "zh-Hans" : "未选择设备"
-    },
-    "device.select" : {
-      "en" : "Select Device",
-      "zh-Hans" : "选择设备"
-    },
-    "local.ip" : {
-      "en" : "Local IP:",
-      "zh-Hans" : "本机IP:"
-    },
-    "local.port" : {
-      "en" : "Receive Port:",
-      "zh-Hans" : "接收端口:"
-    },
-    "local.port.placeholder" : {
-      "en" : "Port",
-      "zh-Hans" : "端口"
-    },
-    "local.start.receive" : {
-      "en" : "Start Receiving",
-      "zh-Hans" : "开始接收"
-    },
-    "local.stop.receive" : {
-      "en" : "Stop Receiving",
-      "zh-Hans" : "停止接收"
-    },
-    "network.error" : {
-      "en" : "Error",
-      "zh-Hans" : "错误"
-    },
-    "network.pro" : {
-      "en" : "(Pro)",
-      "zh-Hans" : "（专业版）"
-    },
-    "network.start.send" : {
-      "en" : "Start Sending",
-      "zh-Hans" : "开始发送"
-    },
-    "network.stop.send" : {
-      "en" : "Stop Sending",
-      "zh-Hans" : "停止发送"
-    },
-    "network.title" : {
-      "en" : "Enter IP Address to Connect",
-      "zh-Hans" : "手动输入 IP 地址连接"
-    },
-    "onboarding.start" : {
-      "en" : "Get Started",
-      "zh-Hans" : "开始使用"
-    },
-    "onboarding.step.1.desc" : {
-      "en" : "Select AirPlay or Bluetooth device to stream audio wirelessly to TV, speakers, etc.",
-      "zh-Hans" : "选择 AirPlay 或蓝牙设备，将声音无线传输到电视、音响等设备"
-    },
-    "onboarding.step.1.title" : {
-      "en" : "AirPlay Shout",
-      "zh-Hans" : "AirPlay 设备喊话"
-    },
-    "onboarding.step.2.desc" : {
-      "en" : "Automatically discover iOS devices running %@ and stream audio to them",
-      "zh-Hans" : "自动搜索同样运行了 %@ 的 iOS 设备，将声音传输到对方设备"
-    },
-    "onboarding.step.2.title" : {
-      "en" : "Discover Nearby",
-      "zh-Hans" : "发现附近设备"
-    },
-    "onboarding.step.3.desc" : {
-      "en" : "Enter the IP address of another iOS device, tap 'Start Receiving' on that device, then stream audio to it",
-      "zh-Hans" : "输入对方 iOS 设备的 IP 地址，在对方设备上点击「开始接收」后，将声音传输到对方设备"
-    },
-    "onboarding.step.3.title" : {
-      "en" : "Manual IP Connection",
-      "zh-Hans" : "手动 IP 连接"
-    },
-    "onboarding.step.4.desc" : {
-      "en" : "Press button to start transmitting, press again to stop. Waveform shows real-time audio levels",
-      "zh-Hans" : "按下按钮开始传输，再次按下停止，波形图实时反馈音量"
-    },
-    "onboarding.step.4.title" : {
-      "en" : "Press to Speak",
-      "zh-Hans" : "按下说话"
-    },
-    "onboarding.welcome" : {
-      "en" : "Welcome to %@",
-      "zh-Hans" : "欢迎使用 %@"
-    },
-    "p2p.connected" : {
-      "en" : "Connected",
-      "zh-Hans" : "已连接"
-    },
-    "p2p.disconnected" : {
-      "en" : "Disconnected",
-      "zh-Hans" : "未连接"
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存"
+          }
+        }
+      }
     },
     "p2p.title" : {
-      "en" : "Online Devices in LAN",
-      "zh-Hans" : "局域网内的在线设备"
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Online Devices in LAN"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "局域网内的在线设备"
+          }
+        }
+      }
     },
-    "shout.start" : {
-      "en" : "Start",
-      "zh-Hans" : "开始"
+    "p2p.connected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已连接"
+          }
+        }
+      }
     },
-    "shout.stop" : {
-      "en" : "Stop",
-      "zh-Hans" : "停止"
+    "p2p.disconnected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disconnected"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未连接"
+          }
+        }
+      }
     },
-    "status.connected" : {
-      "en" : "Connected",
-      "zh-Hans" : "已连接"
+    "onboarding.welcome" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welcome to %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "欢迎使用 %@"
+          }
+        }
+      }
     },
-    "status.connecting" : {
-      "en" : "Connecting...",
-      "zh-Hans" : "连接中..."
+    "onboarding.step.1.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirPlay Shout"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirPlay 设备喊话"
+          }
+        }
+      }
     },
-    "status.disconnected" : {
-      "en" : "Disconnected",
-      "zh-Hans" : "未连接"
+    "onboarding.step.1.desc" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select AirPlay or Bluetooth device to stream audio wirelessly to TV, speakers, etc."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择 AirPlay 或蓝牙设备，将声音无线传输到电视、音响等设备"
+          }
+        }
+      }
     },
-    "status.transmitting" : {
-      "en" : "Transmitting",
-      "zh-Hans" : "传输中"
+    "onboarding.step.2.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discover Nearby"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发现附近设备"
+          }
+        }
+      }
     },
-    "tab.airplay" : {
-      "en" : "AirPlay Shout",
-      "zh-Hans" : "AirPlay 喊话"
+    "onboarding.step.2.desc" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatically discover iOS devices running %@ and stream audio to them"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动搜索同样运行了 %@ 的 iOS 设备，将声音传输到对方设备"
+          }
+        }
+      }
     },
-    "tab.manual" : {
-      "en" : "Manual Connect",
-      "zh-Hans" : "手动连接"
+    "onboarding.step.3.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manual IP Connection"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手动 IP 连接"
+          }
+        }
+      }
     },
-    "tab.nearby" : {
-      "en" : "Nearby",
-      "zh-Hans" : "附近设备"
+    "onboarding.step.3.desc" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter the IP address of another iOS device, tap 'Start Receiving' on that device, then stream audio to it"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入对方 iOS 设备的 IP 地址，在对方设备上点击「开始接收」后，将声音传输到对方设备"
+          }
+        }
+      }
+    },
+    "onboarding.step.4.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Press to Speak"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按下说话"
+          }
+        }
+      }
+    },
+    "onboarding.step.4.desc" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Press button to start transmitting, press again to stop. Waveform shows real-time audio levels"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按下按钮开始传输，再次按下停止，波形图实时反馈音量"
+          }
+        }
+      }
+    },
+    "onboarding.start" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get Started"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始使用"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
