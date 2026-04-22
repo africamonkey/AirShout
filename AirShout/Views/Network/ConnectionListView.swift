@@ -11,7 +11,7 @@ struct ConnectionListView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("已保存的连接")
+                Text("connections.title")
                     .font(.headline)
                 Spacer()
                 Button(action: {
@@ -25,7 +25,7 @@ struct ConnectionListView: View {
             .padding(.bottom, 4)
 
             if savedConnections.isEmpty {
-                Text("暂无保存的连接")
+                Text("connections.empty")
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 20)
@@ -95,24 +95,24 @@ struct AddConnectionSheet: View {
     var body: some View {
         NavigationView {
             Form {
-                Section("连接信息") {
-                    TextField("名称", text: $name)
-                    TextField("IP地址", text: $ip)
+                Section("connections.title") {
+                    TextField("connections.name.placeholder", text: $name)
+                    TextField("connections.ip.placeholder", text: $ip)
                         .keyboardType(.decimalPad)
-                    TextField("端口", text: $port)
+                    TextField("connections.port.placeholder", text: $port)
                         .keyboardType(.numberPad)
                 }
             }
-            .navigationTitle("添加连接")
+            .navigationTitle("connections.add")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
+                    Button("connections.cancel") {
                         isPresented = false
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("保存") {
+                    Button("connections.save") {
                         onSave(name, ip, port)
                         isPresented = false
                     }
