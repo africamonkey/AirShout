@@ -20,40 +20,40 @@ struct OnboardingView: View {
                 .frame(width: 80, height: 80)
                 .cornerRadius(16)
 
-            Text("欢迎使用 \(appName)")
+            Text(String(format: NSLocalizedString("onboarding.welcome", comment: ""), appName))
                 .font(.largeTitle)
                 .fontWeight(.bold)
 
             VStack(alignment: .leading, spacing: 24) {
                 StepView(
                     number: 1,
-                    title: "AirPlay 设备喊话",
-                    description: "选择 AirPlay 或蓝牙设备，将声音无线传输到电视、音响等设备"
+                    title: String(localized: "onboarding.step.1.title"),
+                    description: String(localized: "onboarding.step.1.desc")
                 )
 
                 StepView(
                     number: 2,
-                    title: "发现附近设备",
-                    description: "自动搜索同样运行了 \(appName) 的 iOS 设备，将声音传输到对方设备"
+                    title: String(localized: "onboarding.step.2.title"),
+                    description: String(format: NSLocalizedString("onboarding.step.2.desc", comment: ""), appName)
                 )
 
                 StepView(
                     number: 3,
-                    title: "手动 IP 连接",
-                    description: "输入对方 iOS 设备的 IP 地址，在对方设备上点击「开始接收」后，将声音传输到对方设备"
+                    title: String(localized: "onboarding.step.3.title"),
+                    description: String(localized: "onboarding.step.3.desc")
                 )
 
                 StepView(
                     number: 4,
-                    title: "按下说话",
-                    description: "按下按钮开始传输，再次按下停止，波形图实时反馈音量"
+                    title: String(localized: "onboarding.step.4.title"),
+                    description: String(localized: "onboarding.step.4.desc")
                 )
             }
             .padding(.horizontal)
 
             Spacer()
 
-            Button("开始使用") {
+            Button(String(localized: "onboarding.start")) {
                 isPresented = false
             }
             .buttonStyle(.borderedProminent)
