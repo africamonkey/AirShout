@@ -16,9 +16,9 @@ struct NetworkView: View {
 
     var body: some View {
         NavigationStack {
-            Text("手动输入 IP 地址连接")
+            Text("network.title")
                 .font(.headline)
-            Text("（专业版）")
+            Text("network.pro")
                 .font(.footnote)
             VStack(spacing: 16) {
                 LocalInfoView(
@@ -56,7 +56,7 @@ struct NetworkView: View {
                         }) {
                             HStack {
                                 Image(systemName: viewModel.isTransmitting ? "stop.fill" : "play.fill")
-                                Text(viewModel.isTransmitting ? "停止发送" : "开始发送")
+                                Text(viewModel.isTransmitting ? "network.stop.send" : "network.start.send")
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
@@ -79,7 +79,7 @@ struct NetworkView: View {
                     }
                 )
             }
-            .alert("错误", isPresented: .constant(viewModel.errorMessage != nil)) {
+            .alert("network.error", isPresented: .constant(viewModel.errorMessage != nil)) {
                 Button("确定") {
                     viewModel.errorMessage = nil
                 }
