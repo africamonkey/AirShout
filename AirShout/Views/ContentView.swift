@@ -52,7 +52,7 @@ struct ContentView: View {
             }
             .padding()
         }
-        .alert("content.airplay.permission.denied", isPresented: $viewModel.showPermissionAlert) {
+        .alert("content.airplay.permission.title", isPresented: $viewModel.showPermissionAlert) {
             Button("content.airplay.permission.settings") {
                 if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
                     UIApplication.shared.open(settingsURL)
