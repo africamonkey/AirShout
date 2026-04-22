@@ -20,7 +20,7 @@ struct OnboardingView: View {
                 .frame(width: 80, height: 80)
                 .cornerRadius(16)
 
-            Text(String(format: NSLocalizedString("onboarding.welcome", comment: ""), appName))
+            Text(String(format: String(localized: "onboarding.welcome"), arguments: [appName]))
                 .font(.largeTitle)
                 .fontWeight(.bold)
 
@@ -34,7 +34,7 @@ struct OnboardingView: View {
                 StepView(
                     number: 2,
                     title: String(localized: "onboarding.step.2.title"),
-                    description: String(format: NSLocalizedString("onboarding.step.2.desc", comment: ""), appName)
+                    description: String(format: String(localized: "onboarding.step.2.desc"), arguments: [appName])
                 )
 
                 StepView(
