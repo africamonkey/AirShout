@@ -17,6 +17,11 @@ struct MainTabView: View {
                 .tabItem {
                     Label("tab.manual", systemImage: "link")
                 }
+
+            SettingsView()
+                .tabItem {
+                    Label("tab.settings", systemImage: "gear")
+                }
         }
     }
 }
