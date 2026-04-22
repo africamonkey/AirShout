@@ -1,0 +1,202 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "connections.add" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Connection"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加连接"
+          }
+        }
+      },
+    },
+    "connections.cancel" : {
+      "en" : "Cancel",
+      "zh-Hans" : "取消"
+    },
+    "connections.empty" : {
+      "en" : "No Saved Connections",
+      "zh-Hans" : "暂无保存的连接"
+    },
+    "connections.ip.placeholder" : {
+      "en" : "IP Address",
+      "zh-Hans" : "IP地址"
+    },
+    "connections.name.placeholder" : {
+      "en" : "Name",
+      "zh-Hans" : "名称"
+    },
+    "connections.port.placeholder" : {
+      "en" : "Port",
+      "zh-Hans" : "端口"
+    },
+    "connections.save" : {
+      "en" : "Save",
+      "zh-Hans" : "保存"
+    },
+    "connections.title" : {
+      "en" : "Saved Connections",
+      "zh-Hans" : "已保存的连接"
+    },
+    "content.airplay.permission.message" : {
+      "en" : "Please enable microphone access in Settings to use AirShout",
+      "zh-Hans" : "请在设置中开启麦克风权限以使用隔空喊话功能"
+    },
+    "content.airplay.permission.settings" : {
+      "en" : "Open Settings",
+      "zh-Hans" : "打开设置"
+    },
+    "content.airplay.permission.title" : {
+      "en" : "Microphone Access Denied",
+      "zh-Hans" : "麦克风权限被拒绝"
+    },
+    "content.airplay.title" : {
+      "en" : "Shout to AirPlay",
+      "zh-Hans" : "向 AirPlay 设备喊话"
+    },
+    "device.none" : {
+      "en" : "No Device Selected",
+      "zh-Hans" : "未选择设备"
+    },
+    "device.select" : {
+      "en" : "Select Device",
+      "zh-Hans" : "选择设备"
+    },
+    "local.ip" : {
+      "en" : "Local IP:",
+      "zh-Hans" : "本机IP:"
+    },
+    "local.port" : {
+      "en" : "Receive Port:",
+      "zh-Hans" : "接收端口:"
+    },
+    "local.port.placeholder" : {
+      "en" : "Port",
+      "zh-Hans" : "端口"
+    },
+    "local.start.receive" : {
+      "en" : "Start Receiving",
+      "zh-Hans" : "开始接收"
+    },
+    "local.stop.receive" : {
+      "en" : "Stop Receiving",
+      "zh-Hans" : "停止接收"
+    },
+    "network.error" : {
+      "en" : "Error",
+      "zh-Hans" : "错误"
+    },
+    "network.pro" : {
+      "en" : "(Pro)",
+      "zh-Hans" : "（专业版）"
+    },
+    "network.start.send" : {
+      "en" : "Start Sending",
+      "zh-Hans" : "开始发送"
+    },
+    "network.stop.send" : {
+      "en" : "Stop Sending",
+      "zh-Hans" : "停止发送"
+    },
+    "network.title" : {
+      "en" : "Enter IP Address to Connect",
+      "zh-Hans" : "手动输入 IP 地址连接"
+    },
+    "onboarding.start" : {
+      "en" : "Get Started",
+      "zh-Hans" : "开始使用"
+    },
+    "onboarding.step.1.desc" : {
+      "en" : "Select AirPlay or Bluetooth device to stream audio wirelessly to TV, speakers, etc.",
+      "zh-Hans" : "选择 AirPlay 或蓝牙设备，将声音无线传输到电视、音响等设备"
+    },
+    "onboarding.step.1.title" : {
+      "en" : "AirPlay Shout",
+      "zh-Hans" : "AirPlay 设备喊话"
+    },
+    "onboarding.step.2.desc" : {
+      "en" : "Automatically discover iOS devices running %@ and stream audio to them",
+      "zh-Hans" : "自动搜索同样运行了 %@ 的 iOS 设备，将声音传输到对方设备"
+    },
+    "onboarding.step.2.title" : {
+      "en" : "Discover Nearby",
+      "zh-Hans" : "发现附近设备"
+    },
+    "onboarding.step.3.desc" : {
+      "en" : "Enter the IP address of another iOS device, tap 'Start Receiving' on that device, then stream audio to it",
+      "zh-Hans" : "输入对方 iOS 设备的 IP 地址，在对方设备上点击「开始接收」后，将声音传输到对方设备"
+    },
+    "onboarding.step.3.title" : {
+      "en" : "Manual IP Connection",
+      "zh-Hans" : "手动 IP 连接"
+    },
+    "onboarding.step.4.desc" : {
+      "en" : "Press button to start transmitting, press again to stop. Waveform shows real-time audio levels",
+      "zh-Hans" : "按下按钮开始传输，再次按下停止，波形图实时反馈音量"
+    },
+    "onboarding.step.4.title" : {
+      "en" : "Press to Speak",
+      "zh-Hans" : "按下说话"
+    },
+    "onboarding.welcome" : {
+      "en" : "Welcome to %@",
+      "zh-Hans" : "欢迎使用 %@"
+    },
+    "p2p.connected" : {
+      "en" : "Connected",
+      "zh-Hans" : "已连接"
+    },
+    "p2p.disconnected" : {
+      "en" : "Disconnected",
+      "zh-Hans" : "未连接"
+    },
+    "p2p.title" : {
+      "en" : "Online Devices in LAN",
+      "zh-Hans" : "局域网内的在线设备"
+    },
+    "shout.start" : {
+      "en" : "Start",
+      "zh-Hans" : "开始"
+    },
+    "shout.stop" : {
+      "en" : "Stop",
+      "zh-Hans" : "停止"
+    },
+    "status.connected" : {
+      "en" : "Connected",
+      "zh-Hans" : "已连接"
+    },
+    "status.connecting" : {
+      "en" : "Connecting...",
+      "zh-Hans" : "连接中..."
+    },
+    "status.disconnected" : {
+      "en" : "Disconnected",
+      "zh-Hans" : "未连接"
+    },
+    "status.transmitting" : {
+      "en" : "Transmitting",
+      "zh-Hans" : "传输中"
+    },
+    "tab.airplay" : {
+      "en" : "AirPlay Shout",
+      "zh-Hans" : "AirPlay 喊话"
+    },
+    "tab.manual" : {
+      "en" : "Manual Connect",
+      "zh-Hans" : "手动连接"
+    },
+    "tab.nearby" : {
+      "en" : "Nearby",
+      "zh-Hans" : "附近设备"
+    }
+  },
+  "version" : "1.0"
+}
