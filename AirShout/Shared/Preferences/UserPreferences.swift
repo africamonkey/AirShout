@@ -9,6 +9,7 @@ final class UserPreferences {
         static let lastDeviceUID = "com.airshout.lastDeviceUID"
         static let hasCompletedOnboarding = "com.airshout.hasCompletedOnboarding"
         static let p2pNickname = "com.airshout.p2pNickname"
+        static let waveformStyle = "com.airshout.waveformStyle"
     }
     
     private let deviceName: String
@@ -25,6 +26,11 @@ final class UserPreferences {
     var p2pNickname: String {
         get { UserDefaults.standard.string(forKey: Keys.p2pNickname) ?? deviceName }
         set { UserDefaults.standard.set(newValue, forKey: Keys.p2pNickname) }
+    }
+
+    var waveformStyle: String {
+        get { UserDefaults.standard.string(forKey: Keys.waveformStyle) ?? "classic" }
+        set { UserDefaults.standard.set(newValue, forKey: Keys.waveformStyle) }
     }
     
     func save(deviceUID: String) {
