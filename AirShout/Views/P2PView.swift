@@ -6,7 +6,7 @@ struct P2PView: View {
     var body: some View {
         VStack(spacing: 24) {
             HStack {
-                Text("局域网内的在线设备")
+                Text("p2p.title")
                     .font(.headline)
                 Spacer()
                 Button {
@@ -66,7 +66,7 @@ struct DeviceRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(device.displayName)
                     .font(.body)
-                Text(device.isConnected ? "已连接" : "未连接")
+                Text(device.isConnected ? "p2p.connected" : "p2p.disconnected")
                     .font(.caption)
                     .foregroundColor(device.isConnected ? .green : .secondary)
             }
