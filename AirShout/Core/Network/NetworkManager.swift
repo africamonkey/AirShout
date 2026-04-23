@@ -55,6 +55,11 @@ final class NetworkManager: NSObject, AudioManaging {
     private var isReceiving: Bool = false
     private var isDisconnecting: Bool = false
 
+    private var connectingTimer: Timer?
+    private var currentConnectingId: Int = 0
+    private let connectingTimeout: TimeInterval = 3.0
+    private var pendingConnectionId: Int = 0
+
     private override init() {
         super.init()
     }
@@ -164,11 +169,14 @@ final class NetworkManager: NSObject, AudioManaging {
     func connect(ip: String, port: UInt16) {
         guard !isDisconnecting else { return }
 
+        connectingTimer?.invalidate()
+        connectingTimer = nil
         clientConnection?.cancel()
         clientConnection = nil
 
         isServerMode = false
         connectionStatus = .connecting
+        pendingConnectionId = currentConnectingId
 
         let endpoint = NWEndpoint.hostPort(host: .init(ip), port: .init(rawValue: port)!)
         clientConnection = NWConnection(to: endpoint, using: .tcp)
@@ -177,7 +185,8 @@ final class NetworkManager: NSObject, AudioManaging {
             guard let self = self else { return }
             switch state {
             case .ready:
-                print("Client connected to \(ip):\(port)")
+                self.connectingTimer?.invalidate()
+                self.connectingTimer = nil
                 self.connectionsQueue.async {
                     self.activeConnection = self.clientConnection
                 }
@@ -187,7 +196,8 @@ final class NetworkManager: NSObject, AudioManaging {
                 self.startReceiving()
                 self.receiveData(from: self.clientConnection)
             case .failed(let error):
-                print("Client connection failed: \(error)")
+                self.connectingTimer?.invalidate()
+                self.connectingTimer = nil
                 self.connectionsQueue.async {
                     self.activeConnection = nil
                 }
@@ -195,21 +205,50 @@ final class NetworkManager: NSObject, AudioManaging {
                     self.connectionStatus = .error(String(localized: "network.connection.failed", defaultValue: "Connection failed: \(error.localizedDescription)"))
                 }
             case .cancelled:
-                print("Client connection cancelled")
+                self.connectingTimer?.invalidate()
+                self.connectingTimer = nil
                 self.connectionsQueue.async {
                     self.activeConnection = nil
                 }
                 DispatchQueue.main.async {
-                    if self.isRunning == false {
+                    if self.isRunning == false && self.currentConnectingId == self.pendingConnectionId {
                         self.connectionStatus = .disconnected
                     }
                 }
+            case .waiting(let error):
+                self.connectingTimer?.invalidate()
+                self.connectingTimer = nil
+                self.connectionsQueue.async {
+                    self.activeConnection = nil
+                }
+                DispatchQueue.main.async {
+                    self.connectionStatus = .error(String(localized: "network.connection.failed", defaultValue: "Connection waiting: \(error.localizedDescription)"))
+                }
+            case .preparing:
+                self.startConnectingTimer()
             default:
                 break
             }
         }
 
         clientConnection?.start(queue: networkQueue)
+    }
+
+    private func startConnectingTimer() {
+        connectingTimer?.invalidate()
+        currentConnectingId += 1
+        let timerConnectingId = currentConnectingId
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.connectingTimer = Timer.scheduledTimer(withTimeInterval: self.connectingTimeout, repeats: false) { [weak self] _ in
+                guard let self = self else { return }
+                if self.connectionStatus == .connecting && self.currentConnectingId == timerConnectingId && timerConnectingId == self.pendingConnectionId {
+                    self.connectionStatus = .disconnected
+                    self.clientConnection?.cancel()
+                    self.clientConnection = nil
+                }
+            }
+        }
     }
 
     func disconnect() {
@@ -262,7 +301,7 @@ final class NetworkManager: NSObject, AudioManaging {
 
         DispatchQueue.main.async { [weak self] in
             self?.isRunning = true
-            self?.connectionStatus = .connected
+            self?.connectionStatus = .transmitting
         }
     }
 
