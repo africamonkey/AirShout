@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - AirShout</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f7;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        header {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        h1 {
+            font-size: 2rem;
+            color: #1d1d1f;
+            margin-bottom: 10px;
+        }
+        .last-updated {
+            color: #86868b;
+            font-size: 0.9rem;
+        }
+        .content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        h2 {
+            color: #1d1d1f;
+            font-size: 1.4rem;
+            margin: 30px 0 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        h2:first-of-type {
+            margin-top: 0;
+        }
+        h3 {
+            color: #1d1d1f;
+            font-size: 1.1rem;
+            margin: 20px 0 10px;
+        }
+        p {
+            margin-bottom: 15px;
+            color: #515154;
+        }
+        ul, ol {
+            margin: 15px 0 15px 25px;
+            color: #515154;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        .highlight-box {
+            background: #f5f5f7;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .highlight-box.warning {
+            background: #fff5e6;
+            border-left: 4px solid #ff9500;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        th {
+            background: #f5f5f7;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #86868b;
+            font-size: 0.85rem;
+        }
+        footer a {
+            color: #007AFF;
+            text-decoration: none;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            .container { padding: 20px 15px; }
+            .content, header { padding: 25px; }
+            h1 { font-size: 1.6rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Privacy Policy</h1>
+            <p class="last-updated">Last updated: April 23, 2026</p>
+            <p><strong>AirShout</strong></p>
+        </header>
+
+        <div class="content">
+            <p>
+                This Privacy Policy describes how AirShout ("we", "us", or "our") handles your information when you use our iOS application.
+            </p>
+
+            <h2>1. Information We Collect</h2>
+
+            <h3>1.1 Audio Data</h3>
+            <p>
+                AirShout is a voice transmission application. When you use the app to speak, <strong>your voice is captured by your device's microphone and transmitted to your selected output devices</strong>. This audio data:
+            </p>
+            <ul>
+                <li>Is processed locally on your device in real-time</li>
+                <li>Is transmitted only to devices you explicitly select</li>
+                <li>Is not stored on our servers or any third-party services</li>
+                <li>Is not recorded or saved unless you explicitly choose to do so</li>
+            </ul>
+
+            <h3>1.2 Device Information</h3>
+            <p>When you use AirShout, we may collect:</p>
+            <table>
+                <tr><th>Data Type</th><th>Purpose</th><th>Storage</th></tr>
+                <tr><td>Device Name</td><td>Display in P2P/TCP device lists</td><td>On-device only</td></tr>
+                <tr><td>IP Address</td><td>TCP connection establishment</td><td>On-device only</td></tr>
+                <tr><td>Network Information</td><td>Device discovery on local network</td><td>Not stored</td></tr>
+            </table>
+
+            <h3>1.3 App Preferences</h3>
+            <p>The following preferences are stored locally on your device:</p>
+            <ul>
+                <li>Last selected AirPlay device</li>
+                <li>Saved TCP connections</li>
+                <li>Custom device nickname</li>
+                <li>Waveform display style preference</li>
+                <li>Onboarding completion status</li>
+            </ul>
+
+            <div class="highlight-box warning">
+                <strong>Important:</strong> None of this data is transmitted to our servers. It remains on your device and is deleted when you uninstall the app.
+            </div>
+
+            <h2>2. How Your Information is Used</h2>
+
+            <h3>2.1 Audio Transmission</h3>
+            <p>Your voice data is used exclusively for:</p>
+            <ul>
+                <li>Real-time transmission to your selected output device (AirPlay, P2P, or TCP)</li>
+                <li>Calculating audio levels for waveform visualization</li>
+            </ul>
+
+            <h3>2.2 Local Network Discovery</h3>
+            <p>For P2P and TCP modes, your device broadcasts presence information on the local network to enable device discovery. This includes:</p>
+            <ul>
+                <li>Your device name</li>
+                <li>Your IP address and port</li>
+            </ul>
+            <p>This information is only visible to other AirShout users on the same local network and is not transmitted over the internet.</p>
+
+            <h2>3. Data Sharing</h2>
+
+            <p><strong>AirShout does not sell, trade, or otherwise transfer your personal information to external parties.</strong></p>
+
+            <p>Your audio data is transmitted only in the following ways:</p>
+            <ul>
+                <li><strong>To AirPlay devices</strong> - via Apple's AirPlay protocol</li>
+                <li><strong>To other iOS devices</strong> - via Multipeer Connectivity (P2P) or TCP connection</li>
+            </ul>
+
+            <p>We do not have access to your audio data as it is processed locally and transmitted directly between devices.</p>
+
+            <h2>4. Data Retention</h2>
+
+            <p>AirShout does not store your audio data on any server. Local preferences are stored:</p>
+            <ul>
+                <li>Until you delete the app</li>
+                <li>Until you reset your device settings</li>
+                <li>Until you clear the app's data through iOS Settings</li>
+            </ul>
+
+            <h2>5. Security</h2>
+
+            <p>We implement the following security measures:</p>
+            <ul>
+                <li><strong>Local processing</strong> - Audio is processed on-device, minimizing exposure</li>
+                <li><strong>Direct transmission</strong> - Audio goes directly to target devices, not through intermediaries</li>
+                <li><strong>Encrypted P2P</strong> - Multipeer Connectivity provides built-in encryption</li>
+                <li><strong>No cloud storage</strong> - Your audio never touches external servers</li>
+            </ul>
+
+            <h2>6. Third-Party Services</h2>
+
+            <p>AirShout uses the following Apple frameworks:</p>
+            <ul>
+                <li><strong>AVFoundation</strong> - Audio capture and playback</li>
+                <li><strong>AVFAudio</strong> - Audio session management</li>
+                <li><strong>MultipeerConnectivity</strong> - P2P device discovery and communication</li>
+                <li><strong>Network</strong> - TCP/IP networking</li>
+                <li><strong>MediaPlayer</strong> - AirPlay device selection</li>
+            </ul>
+            <p>These frameworks handle audio and network operations. Please refer to Apple's Privacy Policy for information about how these frameworks handle data.</p>
+
+            <h2>7. Children's Privacy</h2>
+
+            <p>
+                AirShout is not intended for use by children under the age of 13. We do not knowingly collect personal information from children under 13. If you become aware that a child has provided us with personal information, please contact us and we will delete such information.
+            </p>
+
+            <h2>8. Changes to This Policy</h2>
+
+            <p>
+                We may update this Privacy Policy from time to time to reflect changes in our practices or for other operational, legal, or regulatory reasons. Any changes will be posted on this page with an updated "Last updated" date.
+            </p>
+            <p>
+                We encourage you to review this Privacy Policy periodically.
+            </p>
+
+            <h2>9. Contact Us</h2>
+
+            <p>If you have any questions or concerns about this Privacy Policy, please contact us:</p>
+            <ul>
+                <li>By email: gzez2012@163.com</li>
+                <li>By <a href=https://github.com/africamonkey/AirShout>github</a></li>
+                <li>Through the App Store: AirShout support page</li>
+            </ul>
+
+            <h2>10. Your Rights</h2>
+
+            <p>Depending on your location, you may have certain rights regarding your personal information:</p>
+            <ul>
+                <li><strong>Access</strong> - Request a copy of your personal information</li>
+                <li><strong>Correction</strong> - Request correction of inaccurate information</li>
+                <li><strong>Deletion</strong> - Request deletion of your personal information</li>
+                <li><strong>Opt-out</strong> - You can uninstall AirShout at any time</li>
+            </ul>
+
+            <h2>11. Summary</h2>
+
+            <div class="highlight-box">
+                <p style="margin-bottom: 0;"><strong>AirShout is designed with privacy in mind:</strong></p>
+                <ul style="margin-bottom: 0;">
+                    <li>Your voice is transmitted only to your chosen devices</li>
+                    <li>Audio is never stored on external servers</li>
+                    <li>No account or login required</li>
+                    <li>No data sold to third parties</li>
+                    <li>Local network discovery uses only local broadcast</li>
+                </ul>
+            </div>
+        </div>
+
+        <footer>
+            <p><a href="index.html">← Back to AirShout</a></p>
+            <p>© 2026 AirShout. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>

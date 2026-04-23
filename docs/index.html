@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirShout - Real-Time Voice Intercom</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            padding: 60px 0;
+            color: white;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+        }
+        .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+        .content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #667eea;
+            font-size: 1.8rem;
+            margin: 30px 0 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        h2:first-child {
+            margin-top: 0;
+        }
+        h3 {
+            color: #764ba2;
+            font-size: 1.3rem;
+            margin: 20px 0 10px;
+        }
+        p {
+            margin-bottom: 15px;
+        }
+        ul, ol {
+            margin: 15px 0 15px 25px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .feature-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .feature-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .feature-desc {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .transmission-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 5px solid #667eea;
+        }
+        .transmission-card.p2p {
+            border-left-color: #28a745;
+        }
+        .transmission-card.tcp {
+            border-left-color: #dc3545;
+        }
+        .transmission-card h3 {
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .transmission-card .tag {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        .tag.airplay {
+            background: #007AFF;
+            color: white;
+        }
+        .tag.p2p {
+            background: #28a745;
+            color: white;
+        }
+        .tag.tcp {
+            background: #dc3545;
+            color: white;
+        }
+        .diagram {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .spec-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .spec-table th, .spec-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .spec-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+        .spec-table tr:hover {
+            background: #f8f9fa;
+        }
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: white;
+            opacity: 0.8;
+        }
+        footer a {
+            color: white;
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            h1 { font-size: 2rem; }
+            .content { padding: 25px; }
+            .feature-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>AirShout</h1>
+            <p class="subtitle">Real-Time Voice Intercom for iOS</p>
+            <span class="badge">Tap to Talk</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="content">
+            <h2>About AirShout</h2>
+            <p>
+                AirShout is an iOS application that enables <strong>real-time voice transmission</strong> from your iPhone or iPad to other devices. Simply tap the talk button to start broadcasting your voice to selected output devices; tap again to stop.
+            </p>
+            <p>
+                Whether you want to shout announcements through HomePods in different rooms, have a quick intercom chat with family members on the same network, or stream audio to any AirPlay-enabled device, AirShout provides a seamless experience.
+            </p>
+
+            <h2>Key Features</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <div class="feature-title">Tap to Toggle</div>
+                    <div class="feature-desc">Tap the button to start or stop voice transmission</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-title">Real-Time Waveform</div>
+                    <div class="feature-desc">Visual feedback showing your voice level in real-time</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔊</div>
+                    <div class="feature-title">Haptic Feedback</div>
+                    <div class="feature-desc">Tactile confirmation when you start and stop speaking</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎧</div>
+                    <div class="feature-title">Background Audio</div>
+                    <div class="feature-desc">Continues transmission even when app is in background</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>Three Transmission Methods</h2>
+            <p>
+                AirShout supports three different transmission methods to suit various use cases and device configurations.
+            </p>
+
+            <div class="transmission-card">
+                <h3>
+                    1. AirPlay
+                    <span class="tag airplay">Built-in</span>
+                </h3>
+                <p>
+                    The default transmission method uses Apple's AirPlay technology to stream audio directly to AirPlay-enabled devices such as Apple TV, HomePod, or any AirPlay-compatible speaker.
+                </p>
+                <h4>How it works:</h4>
+                <div class="diagram">
+Microphone → AVAudioEngine → AVAudioPlayerNode → AirPlay Device
+                      ↓
+                Audio Level Calculation → Real-time Waveform Display
+                </div>
+                <h4>Audio Specifications:</h4>
+                <table class="spec-table">
+                    <tr><th>Parameter</th><th>Value</th></tr>
+                    <tr><td>Sample Rate</td><td>44100 Hz</td></tr>
+                    <tr><td>Channels</td><td>Stereo</td></tr>
+                    <tr><td>Bit Depth</td><td>16-bit</td></tr>
+                    <tr><td>Format</td><td>Linear PCM</td></tr>
+                </table>
+                <h4>Requirements:</h4>
+                <ul>
+                    <li>AirPlay device on the same WiFi network</li>
+                    <li>iOS device with microphone access</li>
+                </ul>
+            </div>
+
+            <div class="transmission-card p2p">
+                <h3>
+                    2. P2P (Multipeer Connectivity)
+                    <span class="tag p2p">LAN P2P</span>
+                </h3>
+                <p>
+                    For direct voice communication between iOS devices on the same local network without requiring any server infrastructure. Uses Apple's Multipeer Connectivity framework for automatic peer discovery and encrypted communication.
+                </p>
+                <h4>How it works:</h4>
+                <div class="diagram">
+Microphone → AVAudioEngine.inputNode → Chunk (50ms)
+    ↓
+MCSession.send() [unreliable] → Other Devices
+    ↓
+AVAudioPlayerNode → Speaker
+                </div>
+                <h4>Audio Specifications:</h4>
+                <table class="spec-table">
+                    <tr><th>Parameter</th><th>Value</th></tr>
+                    <tr><td>Sample Rate</td><td>44100 Hz</td></tr>
+                    <tr><td>Channels</td><td>Mono</td></tr>
+                    <tr><td>Bit Depth</td><td>16-bit</td></tr>
+                    <tr><td>Chunk Size</td><td>50ms (2205 samples)</td></tr>
+                    <tr><td>Format</td><td>Raw PCM Data</td></tr>
+                </table>
+                <h4>Key Benefits:</h4>
+                <ul>
+                    <li><strong>No server required</strong> - Pure peer-to-peer communication</li>
+                    <li><strong>Auto discovery</strong> - Devices found automatically on LAN</li>
+                    <li><strong>Built-in encryption</strong> - MCSession provides automatic encryption</li>
+                    <li><strong>Low latency</strong> - Target end-to-end latency under 100ms</li>
+                </ul>
+            </div>
+
+            <div class="transmission-card tcp">
+                <h3>
+                    3. TCP Network
+                    <span class="tag tcp">Manual TCP</span>
+                </h3>
+                <p>
+                    For reliable, direct TCP connections between devices. Manual IP/port input - no automatic discovery. Once connected, audio streams over TCP with guaranteed delivery.
+                </p>
+                <h4>How it works:</h4>
+                <div class="diagram">
+[Manual Setup]
+User enters: IP Address + Port
+
+[Connection Phase]
+TCP Listener ←→ TCP Connection
+
+[Streaming Phase]
+Microphone → TCP Connection → AVAudioPlayerNode → Speaker
+                </div>
+                <h4>Protocol Format:</h4>
+                <div class="diagram">
+[Magic: 2 bytes][Version: 1 byte][Type: 1 byte][Timestamp: 4 bytes][Length: 2 bytes][Payload: n bytes]
+                </div>
+                <h4>Features:</h4>
+                <ul>
+                    <li><strong>Manual connection</strong> - Enter target device IP and port directly</li>
+                    <li><strong>Reliable delivery</strong> - TCP ensures all audio packets arrive in order</li>
+                    <li><strong>Packet processing</strong> - Handles packet fragmentation and reassembly</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>Comparison</h2>
+            <table class="spec-table">
+                <tr>
+                    <th>Feature</th>
+                    <th>AirPlay</th>
+                    <th>P2P (MC)</th>
+                    <th>TCP Network</th>
+                </tr>
+                <tr>
+                    <td>Target Device</td>
+                    <td>Apple TV, HomePod, AirPlay speakers</td>
+                    <td>iOS devices (AirShout users)</td>
+                    <td>Any device with TCP support</td>
+                </tr>
+                <tr>
+                    <td>Connection</td>
+                    <td>Via WiFi router</td>
+                    <td>Direct LAN P2P</td>
+                    <td>Direct TCP</td>
+                </tr>
+                <tr>
+                    <td>Discovery</td>
+                    <td>Automatic via AirPlay</td>
+                    <td>Automatic via MultipeerConnectivity</td>
+                    <td>Manual (enter IP & port)</td>
+                </tr>
+                <tr>
+                    <td>Latency</td>
+                    <td>Low</td>
+                    <td>Very Low (~100ms target)</td>
+                    <td>Low</td>
+                </tr>
+                <tr>
+                    <td>Reliability</td>
+                    <td>High</td>
+                    <td>Best effort (UDP-like)</td>
+                    <td>Guaranteed (TCP)</td>
+                </tr>
+                <tr>
+                    <td>Encryption</td>
+                    <td>Built-in</td>
+                    <td>Built-in (MCSession)</td>
+                    <td>Optional</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="content">
+            <h2>Technical Architecture</h2>
+            <h3>Core Components</h3>
+            <table class="spec-table">
+                <tr><th>Component</th><th>Responsibility</th></tr>
+                <tr><td>AirPlayAudioManager</td><td>AirPlay-specific audio routing and playback via AVAudioEngine</td></tr>
+                <tr><td>P2PAudioManager</td><td>Multipeer Connectivity session and P2P audio streaming</td></tr>
+                <tr><td>NetworkManager</td><td>TCP server/client, audio streaming over TCP</td></tr>
+                <tr><td>PacketProcessor</td><td>TCP packet assembly/disassembly, protocol parsing</td></tr>
+                <tr><td>AudioLevelProcessor</td><td>Audio level calculation for waveform display</td></tr>
+                <tr><td>AudioSessionConfig</td><td>AVAudioSession configuration and permission handling</td></tr>
+            </table>
+
+            <h3>Thread Safety</h3>
+            <p>
+                AirShout uses dedicated serial queues for different subsystems to ensure thread safety:
+            </p>
+            <ul>
+                <li><strong>engineQueue</strong> - Audio engine operations</li>
+                <li><strong>connectionsQueue</strong> - TCP connection management</li>
+                <li><strong>mcQueue</strong> - Multipeer Connectivity operations</li>
+                <li><strong>MainActor</strong> - UI updates only</li>
+            </ul>
+        </div>
+
+        <div class="content">
+            <h2>Requirements</h2>
+            <ul>
+                <li><strong>iOS Device</strong> - iPhone or iPad (simulator not supported)</li>
+                <li><strong>iOS Version</strong> - iOS 15.0 or later</li>
+                <li><strong>Microphone</strong> - Required for voice transmission</li>
+                <li><strong>Network</strong> - All devices on same WiFi for AirPlay/TCP; LAN for P2P</li>
+            </ul>
+
+            <h2>Privacy</h2>
+            <p>
+                AirShout is designed with privacy in mind. Audio is processed locally and transmitted only to selected devices. For more information, see our <a href="privacy.html">Privacy Policy</a>.
+            </p>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>AirShout - Real-Time Voice Intercom</p>
+            <p><a href="privacy.html">Privacy Policy</a></p>
+        </div>
+    </footer>
+</body>
+</html>
