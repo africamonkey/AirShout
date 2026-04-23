@@ -24,6 +24,17 @@ struct SettingsView: View {
                         }
                     }
                 }
+
+                Section("settings.about") {
+                    NavigationLink {
+                        AboutView()
+                    } label: {
+                        HStack {
+                            Text("settings.about")
+                            Spacer()
+                        }
+                    }
+                }
             }
             .navigationTitle("settings.title")
         }
