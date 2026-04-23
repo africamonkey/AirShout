@@ -26,6 +26,10 @@ struct SettingsView: View {
                 }
 
                 Section("settings.about") {
+                    Link(destination: URL(string: "https://github.com/africamonkey/AirShout")!) {
+                        Label(String(localized: "settings.github"), systemImage: "link")
+                    }
+
                     NavigationLink {
                         AboutView()
                     } label: {

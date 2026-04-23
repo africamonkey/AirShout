@@ -878,6 +878,22 @@
         }
       }
     },
+    "settings.github" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Github Repository"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Github 仓库"
+          }
+        }
+      }
+    },
     "settings.title" : {
       "localizations" : {
         "en" : {
