@@ -1,14 +1,15 @@
 # AirShout - 隔空喊话
 
-实时将麦克风音频传输到 AirPlay 设备播放的 iOS 应用。
+实时将麦克风音频传输到 AirPlay 设备或通过 P2P/TCP 直接传输的 iOS 应用。
 
 ## 功能特性
 
-- **实时传输** - 点击说话按钮，麦克风音频实时流式传输到 AirPlay 设备
-- **设备选择** - 通过系统 AirPlay  picker 选择目标设备
+- **三种传输模式** - 支持 AirPlay、P2P（近距离）和 TCP/IP 直接连接
+- **实时传输** - 点击说话按钮，麦克风音频实时流式传输到目标设备
+- **设备选择** - 通过系统 AirPlay picker、P2P 设备列表或手动输入 IP:Port 选择目标设备
 - **音量反馈** - 实时显示麦克风音量波形
 - **后台音频** - App 进入后台时继续传输
-- **设备记忆** - 自动记住上次使用的 AirPlay 设备
+- **设备记忆** - 自动记住上次使用的设备
 - **Haptic 反馈** - 按下按钮时触发触觉反馈
 
 ## 系统要求
@@ -54,24 +55,32 @@ AirShout/
 ├── AirShout/
 │   ├── App/
 │   │   └── AirShoutApp.swift
+│   ├── Core/
+│   │   └── Network/
+│   │       ├── NetworkManager.swift
+│   │       ├── PacketProcessor.swift
+│   │       └── JitterBuffer.swift
+│   ├── Features/
+│   │   ├── AirPlay/
+│   │   │   └── AirPlayAudioManager.swift
+│   │   └── P2P/
+│   │       ├── P2PAudioManager.swift
+│   │       └── P2PViewModel.swift
 │   ├── Models/
 │   │   ├── Device.swift
 │   │   └── SavedConnection.swift
-│   ├── Managers/
-│   │   ├── AudioManager.swift
-│   │   ├── DevicePreferences.swift
-│   │   └── NetworkManager.swift
 │   ├── ViewModels/
 │   │   └── ShoutViewModel.swift
 │   ├── Views/
+│   │   ├── MainTabView.swift
 │   │   ├── ContentView.swift
 │   │   ├── AirPlayPicker.swift
 │   │   ├── ShoutButton.swift
 │   │   ├── WaveformView.swift
-│   │   └── DeviceListView.swift
-│   ├── Audio/
-│   │   ├── PacketProcessor.swift
-│   │   └── JitterBuffer.swift
+│   │   ├── DeviceListView.swift
+│   │   ├── P2PView.swift
+│   │   ├── NetworkView.swift
+│   │   └── SettingsView.swift
 │   └── Resources/
 │       └── Info.plist
 └── AirShoutTests/
