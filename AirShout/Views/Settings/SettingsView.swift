@@ -30,13 +30,8 @@ struct SettingsView: View {
                         Label(String(localized: "settings.github"), systemImage: "link")
                     }
 
-                    NavigationLink {
-                        AboutView()
-                    } label: {
-                        HStack {
-                            Text("settings.about")
-                            Spacer()
-                        }
+                    NavigationLink(destination: AboutView()) {
+                        Label(String(localized: "settings.about"), systemImage: "info.circle")
                     }
                 }
             }
