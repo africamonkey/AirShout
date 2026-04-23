@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var viewModel = AirPlayViewModel()
     @State private var showOnboarding = !UserPreferences.shared.hasCompletedOnboarding
+    @AppStorage("com.airshout.waveformStyle") private var waveformStyleRaw: String = WaveformStyle.classic.rawValue
 
     var body: some View {
         ZStack {
@@ -34,7 +35,7 @@ struct ContentView: View {
 
                 WaveformView(
                     audioLevel: viewModel.audioLevel,
-                    style: WaveformStyle(rawValue: UserPreferences.shared.waveformStyle) ?? .classic
+                    style: WaveformStyle(rawValue: waveformStyleRaw) ?? .classic
                 )
                     .frame(height: 60)
 

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct P2PView: View {
     @StateObject private var viewModel = P2PViewModel()
+    @AppStorage("com.airshout.waveformStyle") private var waveformStyleRaw: String = WaveformStyle.classic.rawValue
 
     var body: some View {
         VStack(spacing: 24) {
@@ -21,7 +22,7 @@ struct P2PView: View {
 
             Spacer()
 
-            WaveformView(audioLevel: viewModel.audioLevel)
+            WaveformView(audioLevel: viewModel.audioLevel, style: WaveformStyle(rawValue: waveformStyleRaw) ?? .classic)
                 .frame(height: 60)
 
             Spacer()

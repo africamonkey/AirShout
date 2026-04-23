@@ -2,6 +2,7 @@ import SwiftUI
 
 struct NetworkView: View {
     @StateObject private var viewModel = NetworkViewModel()
+    @AppStorage("com.airshout.waveformStyle") private var waveformStyleRaw: String = WaveformStyle.classic.rawValue
 
     private var buttonBackgroundColor: Color {
         let canStart = viewModel.selectedConnection != nil && viewModel.connectionStatus != .connecting
@@ -40,7 +41,7 @@ struct NetworkView: View {
                 Spacer()
 
                 VStack(spacing: 16) {
-                    WaveformView(audioLevel: viewModel.audioLevel)
+                    WaveformView(audioLevel: viewModel.audioLevel, style: WaveformStyle(rawValue: waveformStyleRaw) ?? .classic)
                         .frame(height: 60)
 
                     ConnectionStatusView(status: viewModel.connectionStatus)
