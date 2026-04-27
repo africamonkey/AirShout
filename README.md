@@ -2,6 +2,10 @@
 
 实时将麦克风音频传输到 AirPlay 设备或通过 P2P/TCP 直接传输的 iOS 应用。
 
+如果觉得这个应用好，请前往 App Store 支持一下。感谢大家！
+
+https://github.com/user-attachments/assets/5848e062-bd08-41dd-9c4b-a6263d87dbcb
+
 ## 功能特性
 
 - **三种传输模式** - 支持 AirPlay、P2P（近距离）和 TCP/IP 直接连接
